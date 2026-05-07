@@ -31,6 +31,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Failover Dashboard
     Route::get('failover', [\App\Http\Controllers\Admin\FailoverController::class, 'index'])
         ->name('failover.index');
+    Route::get('failover/status', [\App\Http\Controllers\Admin\FailoverController::class, 'status'])
+        ->name('failover.status');
+    Route::get('failover/server-status/{server}', [\App\Http\Controllers\Admin\FailoverController::class, 'serverStatus'])
+        ->name('failover.server-status');
     Route::get('failover/logs', [\App\Http\Controllers\Admin\FailoverController::class, 'logs'])
         ->name('failover.logs');
     Route::get('failover/settings', [\App\Http\Controllers\Admin\FailoverController::class, 'settings'])

@@ -77,6 +77,25 @@ class FailoverController extends Controller
     }
 
     /**
+     * GET /admin/failover/server-status/{server} (AJAX)
+     * Get status for specific server by name
+     */
+    public function serverStatus(string $serverName): JsonResponse
+    {
+        try {
+            $status = $this->getServerStatus($serverName);
+            return response()->json($status);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'server' => $serverName,
+                'reachable' => false,
+                'online' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * POST /admin/failover/switch
      * Eksekusi failover manual.
      */
