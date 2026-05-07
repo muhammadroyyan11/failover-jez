@@ -58,7 +58,7 @@
         <div class="card server-card h-100" data-server-id="{{ $server->id }}">
             <div class="card-header {{ $server->isPrimary() ? 'bg-success' : 'bg-primary' }} text-white d-flex justify-content-between align-items-center">
                 <span>
-                    <i class="bi bi-server me-2"></i>{{ $server->label }}
+                    <i class="bi bi-{{ $server->server_type === 'database' ? 'database' : 'server' }} me-2"></i>{{ $server->label }}
                     @if($server->isPrimary())
                         <span class="badge bg-white text-success ms-2">PRIMARY</span>
                     @endif
@@ -68,56 +68,119 @@
                 </span>
             </div>
             <div class="card-body" data-server-body="{{ $server->id }}">
-                <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <div class="metric-label">CPU Load</div>
-                        <div class="metric-value" data-metric-cpu="{{ $server->id }}">--</div>
+                @if($server->server_type === 'database')
+                    {{-- DATABASE SERVER CARD - Show Replication Only --}}
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Database Server</strong> - Monitoring via direct MySQL connection
                     </div>
-                    <div class="col-6">
-                        <div class="metric-label">Memory</div>
-                        <div class="metric-value" data-metric-ram="{{ $server->id }}">--</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="metric-label">Disk Usage</div>
-                        <div class="metric-value" data-metric-disk="{{ $server->id }}">--</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="metric-label">Status</div>
-                        <div class="metric-value" data-metric-status="{{ $server->id }}">
-                            <span class="badge bg-secondary">Unknown</span>
+                    
+                    @if($server->db_role && $server->db_role !== 'standalone')
+                    <div class="border rounded p-3 bg-light">
+                        <div class="metric-label mb-2">
+                            <i class="bi bi-database-check me-1"></i>Database Replication Status
+                        </div>
+                        <div class="small" data-replication="{{ $server->id }}">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Role:</span>
+                                <span class="badge bg-{{ $server->db_role === 'master' ? 'primary' : 'info' }}">
+                                    {{ strtoupper($server->db_role) }}
+                                </span>
+                            </div>
+                            @if($server->db_role === 'master')
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Binlog File:</span>
+                                <code class="small" data-master-file="{{ $server->id }}">--</code>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Position:</span>
+                                <code class="small" data-master-pos="{{ $server->id }}">--</code>
+                            </div>
+                            @else
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Replication Lag:</span>
+                                <span data-rep-lag="{{ $server->id }}">--</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>IO Thread:</span>
+                                <span data-rep-io="{{ $server->id }}">--</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>SQL Thread:</span>
+                                <span data-rep-sql="{{ $server->id }}">--</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Status:</span>
+                                <span data-rep-status="{{ $server->id }}">
+                                    <span class="badge bg-secondary">Unknown</span>
+                                </span>
+                            </div>
+                            @endif
                         </div>
                     </div>
-                </div>
-
-                @if($server->db_role && $server->db_role !== 'standalone')
-                <div class="border-top pt-2">
-                    <div class="metric-label"><i class="bi bi-database me-1"></i>Database Replication</div>
-                    <div class="small" data-replication="{{ $server->id }}">
-                        <div class="d-flex justify-content-between">
-                            <span>Role:</span>
-                            <span class="badge bg-{{ $server->db_role === 'master' ? 'primary' : 'info' }}">
-                                {{ strtoupper($server->db_role) }}
-                            </span>
+                    @else
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-database fs-3 d-block mb-2"></i>
+                        <small>No replication configured</small>
+                    </div>
+                    @endif
+                    
+                @else
+                    {{-- WEB SERVER CARD - Show System Metrics --}}
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="metric-label">CPU Load</div>
+                            <div class="metric-value" data-metric-cpu="{{ $server->id }}">--</div>
                         </div>
-                        @if($server->db_role === 'slave')
-                        <div class="d-flex justify-content-between mt-1">
-                            <span>Lag:</span>
-                            <span data-rep-lag="{{ $server->id }}">--</span>
+                        <div class="col-6">
+                            <div class="metric-label">Memory</div>
+                            <div class="metric-value" data-metric-ram="{{ $server->id }}">--</div>
                         </div>
-                        <div class="d-flex justify-content-between mt-1">
-                            <span>Status:</span>
-                            <span data-rep-status="{{ $server->id }}">
+                        <div class="col-6">
+                            <div class="metric-label">Disk Usage</div>
+                            <div class="metric-value" data-metric-disk="{{ $server->id }}">--</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-label">Status</div>
+                            <div class="metric-value" data-metric-status="{{ $server->id }}">
                                 <span class="badge bg-secondary">Unknown</span>
-                            </span>
+                            </div>
                         </div>
-                        @endif
                     </div>
-                </div>
+
+                    @if($server->db_role && $server->db_role !== 'standalone')
+                    <div class="border-top pt-2">
+                        <div class="metric-label"><i class="bi bi-database me-1"></i>Database Replication</div>
+                        <div class="small" data-replication="{{ $server->id }}">
+                            <div class="d-flex justify-content-between">
+                                <span>Role:</span>
+                                <span class="badge bg-{{ $server->db_role === 'master' ? 'primary' : 'info' }}">
+                                    {{ strtoupper($server->db_role) }}
+                                </span>
+                            </div>
+                            @if($server->db_role === 'slave')
+                            <div class="d-flex justify-content-between mt-1">
+                                <span>Lag:</span>
+                                <span data-rep-lag="{{ $server->id }}">--</span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <span>Status:</span>
+                                <span data-rep-status="{{ $server->id }}">
+                                    <span class="badge bg-secondary">Unknown</span>
+                                </span>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
                 @endif
             </div>
             <div class="card-footer bg-transparent d-flex gap-2 justify-content-between">
                 <div class="small text-muted">
                     <i class="bi bi-hdd-network me-1"></i>{{ $server->ip_address }}
+                    @if($server->server_type === 'database')
+                        <span class="badge bg-secondary ms-1">DB Only</span>
+                    @endif
                 </div>
                 <a href="{{ route('admin.servers.edit', $server) }}" class="btn btn-xs btn-outline-secondary btn-sm">
                     <i class="bi bi-gear"></i> Config
@@ -232,21 +295,117 @@ function refreshServerStatus(serverId, serverName) {
         badge.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Checking...';
     }
     
-    // Fetch server status via agent
-    fetch(`/admin/failover/server-status/${serverName}`, {
+    // Check if this is a database-only server
+    const serverCard = document.querySelector(`[data-server-id="${serverId}"]`);
+    const isDatabaseServer = serverCard && serverCard.querySelector('.alert-info strong')?.textContent === 'Database Server';
+    
+    if (isDatabaseServer) {
+        // Database server - check via direct MySQL
+        refreshDatabaseServer(serverId);
+    } else {
+        // Web server - fetch via agent API
+        fetch(`/admin/failover/server-status/${serverName}`, {
+            headers: { 
+                'X-CSRF-TOKEN': CSRF, 
+                'Accept': 'application/json' 
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            updateServerCard(serverId, data);
+        })
+        .catch(err => {
+            console.error(`Failed to fetch status for ${serverName}:`, err);
+            updateServerCardOffline(serverId);
+        });
+    }
+}
+
+function refreshDatabaseServer(serverId) {
+    // Check database replication status via direct MySQL
+    fetch(`/admin/servers/${serverId}/check-replication`, {
+        method: 'POST',
         headers: { 
             'X-CSRF-TOKEN': CSRF, 
-            'Accept': 'application/json' 
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
         }
     })
     .then(r => r.json())
     .then(data => {
-        updateServerCard(serverId, data);
+        updateDatabaseServerCard(serverId, data);
     })
     .catch(err => {
-        console.error(`Failed to fetch status for ${serverName}:`, err);
-        updateServerCardOffline(serverId);
+        console.error(`Failed to check database replication for server ${serverId}:`, err);
+        updateDatabaseServerOffline(serverId);
     });
+}
+
+function updateDatabaseServerCard(serverId, data) {
+    const badge = document.querySelector(`[data-status-badge="${serverId}"]`);
+    
+    if (data.success) {
+        // Database is reachable
+        if (badge) {
+            badge.innerHTML = '<span class="status-dot online"></span>Online';
+        }
+        
+        // Update master status
+        if (data.file && data.position) {
+            const fileEl = document.querySelector(`[data-master-file="${serverId}"]`);
+            const posEl = document.querySelector(`[data-master-pos="${serverId}"]`);
+            if (fileEl) fileEl.textContent = data.file;
+            if (posEl) posEl.textContent = data.position;
+        }
+        
+        // Update slave status
+        if (data.io_running !== undefined) {
+            const lagEl = document.querySelector(`[data-rep-lag="${serverId}"]`);
+            const ioEl = document.querySelector(`[data-rep-io="${serverId}"]`);
+            const sqlEl = document.querySelector(`[data-rep-sql="${serverId}"]`);
+            const statusEl = document.querySelector(`[data-rep-status="${serverId}"]`);
+            
+            if (lagEl) {
+                const lag = data.seconds_behind ?? null;
+                lagEl.textContent = lag === 0 ? '0s (in sync)' : (lag ? lag + 's' : 'N/A');
+            }
+            
+            if (ioEl) {
+                ioEl.innerHTML = data.io_running 
+                    ? '<span class="badge bg-success">Running</span>' 
+                    : '<span class="badge bg-danger">Stopped</span>';
+            }
+            
+            if (sqlEl) {
+                sqlEl.innerHTML = data.sql_running 
+                    ? '<span class="badge bg-success">Running</span>' 
+                    : '<span class="badge bg-danger">Stopped</span>';
+            }
+            
+            if (statusEl) {
+                const healthy = data.io_running && data.sql_running && data.seconds_behind !== null && data.seconds_behind < 10;
+                const badgeClass = healthy ? 'bg-success' : 'bg-danger';
+                const badgeText = healthy ? 'Healthy' : 'Error';
+                statusEl.innerHTML = `<span class="badge ${badgeClass}">${badgeText}</span>`;
+            }
+        }
+    } else {
+        updateDatabaseServerOffline(serverId);
+    }
+}
+
+function updateDatabaseServerOffline(serverId) {
+    const badge = document.querySelector(`[data-status-badge="${serverId}"]`);
+    if (badge) {
+        badge.innerHTML = '<span class="status-dot offline"></span>Offline';
+    }
+    
+    // Reset replication status
+    const lagEl = document.querySelector(`[data-rep-lag="${serverId}"]`);
+    const statusEl = document.querySelector(`[data-rep-status="${serverId}"]`);
+    
+    if (lagEl) lagEl.textContent = '--';
+    if (statusEl) statusEl.innerHTML = '<span class="badge bg-danger">Offline</span>';
 }
 
 function updateServerCard(serverId, status) {

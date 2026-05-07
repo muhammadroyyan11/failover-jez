@@ -16,6 +16,7 @@ class FailoverServer extends Model
         'is_active',
         'priority',
         'notes',
+        'server_type', // web, database, both
         'ssh_host',
         'ssh_port',
         'ssh_user',
