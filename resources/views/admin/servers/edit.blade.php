@@ -17,7 +17,7 @@
 
     <div class="row">
         <div class="col-lg-8">
-            <form action="{{ route('admin.servers.update', $server) }}" method="POST">
+            <form action="{{ route('admin.servers.update', $server) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 
@@ -214,13 +214,65 @@
                             </div>
 
                             <div class="col-md-3 mb-3">
+                                <label for="ssh_auth_type" class="form-label">Authentication Type</label>
+                                <select class="form-select @error('ssh_auth_type') is-invalid @enderror" 
+                                        id="ssh_auth_type" 
+                                        name="ssh_auth_type" 
+                                        onchange="toggleSshAuth()">
+                                    <option value="password" {{ old('ssh_auth_type', $server->ssh_auth_type) === 'password' ? 'selected' : '' }}>Password</option>
+                                    <option value="key" {{ old('ssh_auth_type', $server->ssh_auth_type) === 'key' ? 'selected' : '' }}>SSH Key</option>
+                                </select>
+                                @error('ssh_auth_type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row" id="ssh_password_field">
+                            <div class="col-md-12 mb-3">
                                 <label for="ssh_password" class="form-label">SSH Password</label>
                                 <input type="password" 
                                        class="form-control @error('ssh_password') is-invalid @enderror" 
                                        id="ssh_password" 
                                        name="ssh_password" 
-                                       placeholder="Leave blank to use SSH key">
-                                <small class="text-muted">For password authentication</small>
+                                       placeholder="Leave blank to keep current password">
+                                <small class="text-muted">Only fill if you want to change password</small>
+                                @error('ssh_password')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row" id="ssh_key_field" style="display: none;">
+                            <div class="col-md-8 mb-3">
+                                <label for="ssh_key_file" class="form-label">SSH Private Key File</label>
+                                @if($server->ssh_key_file)
+                                    <div class="alert alert-info alert-sm mb-2">
+                                        <i class="bi bi-key me-1"></i>
+                                        Current key: <code>{{ basename($server->ssh_key_file) }}</code>
+                                    </div>
+                                @endif
+                                <input type="file" 
+                                       class="form-control @error('ssh_key_file') is-invalid @enderror" 
+                                       id="ssh_key_file" 
+                                       name="ssh_key_file"
+                                       accept=".ppk,.pem,.key,.txt">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Upload new key to replace current one. PPK files will be auto-converted.
+                                </small>
+                                @error('ssh_key_file')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="ssh_key_passphrase" class="form-label">Key Passphrase (Optional)</label>
+                                <input type="password" 
+                                       class="form-control @error('ssh_password') is-invalid @enderror" 
+                                       id="ssh_key_passphrase" 
+                                       name="ssh_password" 
+                                       placeholder="If key is encrypted">
+                                <small class="text-muted">Leave empty if no passphrase</small>
                                 @error('ssh_password')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -516,5 +568,25 @@ function checkReplicationStatus() {
         alert('❌ Error: ' + err.message);
     });
 }
+
+// Toggle SSH auth type
+function toggleSshAuth() {
+    const authType = document.getElementById('ssh_auth_type').value;
+    const passwordField = document.getElementById('ssh_password_field');
+    const keyField = document.getElementById('ssh_key_field');
+    
+    if (authType === 'password') {
+        passwordField.style.display = 'block';
+        keyField.style.display = 'none';
+    } else {
+        passwordField.style.display = 'none';
+        keyField.style.display = 'block';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleSshAuth();
+});
 </script>
 @endsection

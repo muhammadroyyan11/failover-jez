@@ -134,24 +134,74 @@ class DatabaseReplicationService
 
     /**
      * Configure slave to replicate from master
+     * 
+     * @param FailoverServer $slave Server yang akan jadi slave
+     * @param string|FailoverServer $master Master server atau IP address
+     * @param string $replUser Replication username
+     * @param string $replPassword Replication password
+     * @param string $logFile Master log file
+     * @param int $logPos Master log position
      */
-    public function configureSlave(FailoverServer $slave, FailoverServer $master, array $masterStatus): array
-    {
+    public function configureSlave(
+        FailoverServer $slave, 
+        $master, 
+        string $replUser = null,
+        string $replPassword = null,
+        string $logFile = null,
+        int $logPos = null
+    ): array {
         try {
             $pdo = $this->createConnection($slave);
             
+            // If master is FailoverServer object, extract data
+            if ($master instanceof FailoverServer) {
+                $masterHost = $master->db_host;
+                $masterPort = $master->db_port;
+                $replUser = $replUser ?? $master->replication_user;
+                $replPassword = $replPassword ?? $master->replication_password;
+                
+                // Get master status if not provided
+                if (!$logFile || !$logPos) {
+                    $masterStatus = $this->getMasterStatus($master);
+                    if (!$masterStatus['success']) {
+                        return [
+                            'success' => false,
+                            'message' => 'Failed to get master status: ' . ($masterStatus['message'] ?? 'Unknown'),
+                        ];
+                    }
+                    $logFile = $masterStatus['file'];
+                    $logPos = $masterStatus['position'];
+                }
+            } else {
+                // Master is IP address string
+                $masterHost = $master;
+                $masterPort = 3306;
+            }
+            
+            // Validate required parameters
+            if (!$replUser || !$replPassword || !$logFile || !$logPos) {
+                return [
+                    'success' => false,
+                    'message' => 'Missing required parameters for slave configuration',
+                ];
+            }
+            
             // Stop slave if running
-            $pdo->exec('STOP SLAVE');
+            try {
+                $pdo->exec('STOP SLAVE');
+            } catch (\PDOException $e) {
+                // Ignore if slave not running
+            }
             
             // Configure master connection
             $changeMaster = sprintf(
                 "CHANGE MASTER TO MASTER_HOST='%s', MASTER_PORT=%d, MASTER_USER='%s', MASTER_PASSWORD='%s', MASTER_LOG_FILE='%s', MASTER_LOG_POS=%d",
-                $master->db_host,
-                $master->db_port,
-                $master->replication_user,
-                $master->replication_password,
-                $masterStatus['file'],
-                $masterStatus['position']
+                $masterHost,
+                $masterPort,
+                $replUser,
+                $replPassword,
+                $logFile,
+                $logPos
             );
             
             $pdo->exec($changeMaster);
@@ -172,6 +222,7 @@ class DatabaseReplicationService
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
+                'error' => $e->getMessage(),
             ];
         }
     }

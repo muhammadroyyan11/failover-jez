@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #1a1d23 0%, #2d3748 100%);
+            background: linear-gradient(135deg, #E31E24 0%, #B91419 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -19,29 +19,29 @@
         .login-card {
             background: #fff;
             border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,.4);
+            box-shadow: 0 20px 60px rgba(227, 30, 36, 0.4);
             width: 100%;
             max-width: 420px;
             overflow: hidden;
         }
 
         .login-header {
-            background: linear-gradient(135deg, #1a1d23, #2d3748);
+            background: linear-gradient(135deg, #E31E24, #B91419);
             padding: 2rem;
             text-align: center;
             color: #fff;
         }
 
         .login-header .shield-icon {
-            width: 64px;
-            height: 64px;
-            background: rgba(255,255,255,.1);
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,.15);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 1rem;
-            font-size: 1.8rem;
+            padding: 1rem;
         }
 
         .login-header h4 {
@@ -52,7 +52,7 @@
 
         .login-header p {
             margin: 0.25rem 0 0;
-            opacity: .6;
+            opacity: .8;
             font-size: .85rem;
         }
 
@@ -68,12 +68,12 @@
         }
 
         .form-control:focus {
-            border-color: #4a5568;
-            box-shadow: 0 0 0 3px rgba(74,85,104,.1);
+            border-color: #E31E24;
+            box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.1);
         }
 
         .btn-login {
-            background: linear-gradient(135deg, #1a1d23, #4a5568);
+            background: linear-gradient(135deg, #E31E24, #B91419);
             border: none;
             border-radius: 8px;
             padding: .75rem;
@@ -82,7 +82,10 @@
             transition: opacity .2s;
         }
 
-        .btn-login:hover { opacity: .9; }
+        .btn-login:hover { 
+            opacity: .9;
+            background: linear-gradient(135deg, #B91419, #E31E24);
+        }
 
         .input-group-text {
             background: #f8fafc;
@@ -112,9 +115,9 @@
             font-size: .7rem;
             padding: .2rem .6rem;
             border-radius: 50px;
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #bbf7d0;
+            background: #fee;
+            color: #B91419;
+            border: 1px solid #fcc;
         }
 
         .alert {
@@ -128,7 +131,7 @@
 <div class="login-card">
     <div class="login-header">
         <div class="shield-icon">
-            <i class="bi bi-shield-check"></i>
+            <img src="{{ asset('logo/jez_pro.png') }}" alt="JezPro Logo" style="width: 48px; height: auto;">
         </div>
         <h4>Failover Panel</h4>
         <p>Disaster Recovery Management</p>

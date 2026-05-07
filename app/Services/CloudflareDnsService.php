@@ -30,7 +30,7 @@ class CloudflareDnsService
     public function updateARecordToJH(): array
     {
         $ip = config('failover.jh_ip');
-        return $this->updateARecord($ip, "Failover: pointing {$this->domain} to JH ({$ip})");
+        return $this->updateARecordLegacy($ip, "Failover: pointing {$this->domain} to JH ({$ip})");
     }
 
     /**
@@ -39,7 +39,7 @@ class CloudflareDnsService
     public function updateARecordToUpcloud(): array
     {
         $ip = config('failover.upcloud_ip');
-        return $this->updateARecord($ip, "Failover: pointing {$this->domain} to UPCLOUD ({$ip})");
+        return $this->updateARecordLegacy($ip, "Failover: pointing {$this->domain} to UPCLOUD ({$ip})");
     }
 
     /**
@@ -78,9 +78,9 @@ class CloudflareDnsService
     }
 
     /**
-     * Update A Record ke IP tertentu.
+     * Update A Record ke IP tertentu (public method).
      */
-    private function updateARecord(string $ip, string $comment = ''): array
+    public function updateARecord(string $ip, string $comment = ''): array
     {
         if (empty($ip)) {
             return ['success' => false, 'error' => 'Target IP is not configured.'];
@@ -121,6 +121,14 @@ class CloudflareDnsService
             Log::error('[CloudflareDnsService] updateARecord exception', ['error' => $e->getMessage()]);
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Update A Record ke IP tertentu (private helper for legacy methods).
+     */
+    private function updateARecordLegacy(string $ip, string $comment = ''): array
+    {
+        return $this->updateARecord($ip, $comment);
     }
 
     /**

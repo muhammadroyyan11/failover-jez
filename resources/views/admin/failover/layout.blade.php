@@ -14,7 +14,10 @@
     <style>
         :root {
             --sidebar-width: 240px;
-            --color-jh: #0d6efd;
+            --color-primary: #E31E24;
+            --color-primary-dark: #B91419;
+            --color-primary-light: #FF4449;
+            --color-jh: #E31E24;
             --color-upcloud: #198754;
             --color-danger: #dc3545;
             --color-warning: #ffc107;
@@ -26,31 +29,55 @@
         .sidebar {
             width: var(--sidebar-width);
             min-height: 100vh;
-            background: #1a1d23;
+            background: #ffffff;
             position: fixed;
             top: 0; left: 0;
             z-index: 1000;
             padding-top: 1rem;
             transition: transform 0.3s ease;
+            border-right: 2px solid #f0f0f0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
         }
         .sidebar .brand {
-            padding: 0.75rem 1.25rem 1.25rem;
-            border-bottom: 1px solid rgba(255,255,255,.1);
+            padding: 1rem 1.25rem 1rem;
+            border-bottom: 2px solid #f0f0f0;
             margin-bottom: 0.5rem;
         }
-        .sidebar .brand h5 { color: #fff; margin: 0; font-size: 1rem; font-weight: 700; }
-        .sidebar .brand small { color: rgba(255,255,255,.5); font-size: 0.75rem; }
+        .sidebar .brand h5 { 
+            color: #1a1d23; 
+            margin: 0; 
+            font-size: 1.1rem; 
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .sidebar .brand small { 
+            color: #6c757d; 
+            font-size: 0.7rem;
+            display: block;
+            margin-top: 0.25rem;
+        }
         .sidebar .nav-link {
-            color: rgba(255,255,255,.65);
+            color: #4a5568;
             padding: 0.6rem 1.25rem;
             border-radius: 0;
             display: flex; align-items: center; gap: 0.6rem;
+            transition: all 0.2s ease;
+            font-weight: 500;
         }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            color: #fff;
-            background: rgba(255,255,255,.08);
+        .sidebar .nav-link:hover {
+            color: var(--color-primary);
+            background: rgba(227, 30, 36, 0.05);
+            border-left: 3px solid var(--color-primary);
+            padding-left: calc(1.25rem - 3px);
         }
-        .sidebar .nav-link i { font-size: 1rem; width: 1.2rem; }
+        .sidebar .nav-link.active {
+            color: var(--color-primary);
+            background: rgba(227, 30, 36, 0.1);
+            border-left: 3px solid var(--color-primary);
+            padding-left: calc(1.25rem - 3px);
+            font-weight: 600;
+        }
+        .sidebar .nav-link i { font-size: 1rem; width: 1.2rem; color: inherit; }
 
         /* Main content */
         .main-content {
@@ -66,12 +93,12 @@
             top: 1rem;
             left: 1rem;
             z-index: 1001;
-            background: #1a1d23;
+            background: var(--color-primary);
             color: white;
             border: none;
             padding: 0.5rem 0.75rem;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(227, 30, 36, 0.3);
         }
 
         /* Mobile overlay */
@@ -176,6 +203,31 @@
         .log-table td { vertical-align: middle; }
         .log-table .badge { font-size: 0.75rem; }
 
+        /* Custom JezPro Red Buttons */
+        .btn-danger, .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            border: none;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-danger:hover, .btn-primary:hover {
+            background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(227, 30, 36, 0.3);
+        }
+        
+        .text-primary {
+            color: var(--color-primary) !important;
+        }
+        
+        .bg-primary {
+            background-color: var(--color-primary) !important;
+        }
+        
+        .border-primary {
+            border-color: var(--color-primary) !important;
+        }
+
         /* RESPONSIVE MOBILE */
         @media (max-width: 768px) {
             .sidebar {
@@ -244,8 +296,12 @@
 <!-- Sidebar -->
 <nav class="sidebar" id="sidebar">
     <div class="brand">
-        <h5><i class="bi bi-shield-check me-2"></i>Failover Panel</h5>
-        <small>{{ config('app.name') }}</small>
+        <div class="d-flex align-items-center gap-3 mb-1">
+            <img src="{{ asset('logo/jez_pro.png') }}" alt="JezPro Logo" style="height: 40px; width: auto;">
+            <div>
+            </div>
+        </div>
+        <small style="padding-left: 0;">Jezpro Failover Panel</small>
     </div>
     <ul class="nav flex-column">
         <li class="nav-item">
@@ -273,7 +329,7 @@
             </a>
         </li>
         <li class="nav-item mt-3">
-            <hr style="border-color: rgba(255,255,255,.1); margin: 0 1.25rem;">
+            <hr style="border-color: #e9ecef; margin: 0 1.25rem;">
         </li>
         <li class="nav-item">
             <a href="{{ url('/') }}" class="nav-link">
@@ -282,15 +338,15 @@
         </li>
     </ul>
 
-    <div class="position-absolute bottom-0 w-100 p-3" style="border-top: 1px solid rgba(255,255,255,.1);">
+    <div class="position-absolute bottom-0 w-100 p-3" style="border-top: 2px solid #f0f0f0; background: #fafafa;">
         <div class="d-flex align-items-center gap-2">
-            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
-                 style="width:32px;height:32px;font-size:.8rem;color:#fff;">
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                 style="width:36px;height:36px;font-size:.85rem;color:#fff;background:var(--color-primary);font-weight:600;">
                 {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
             </div>
             <div>
-                <div style="color:#fff;font-size:.8rem;font-weight:600;">{{ auth()->user()->name ?? 'User' }}</div>
-                <div style="color:rgba(255,255,255,.4);font-size:.7rem;">Superadmin</div>
+                <div style="color:#1a1d23;font-size:.85rem;font-weight:600;">{{ auth()->user()->name ?? 'User' }}</div>
+                <div style="color:#6c757d;font-size:.7rem;">Superadmin</div>
             </div>
         </div>
     </div>

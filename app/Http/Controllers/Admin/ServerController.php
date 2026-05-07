@@ -52,6 +52,8 @@ class ServerController extends Controller
             'ssh_port' => 'nullable|integer|min:1|max:65535',
             'ssh_user' => 'nullable|string',
             'ssh_password' => 'nullable|string',
+            'ssh_auth_type' => 'required|in:password,key',
+            'ssh_key_file' => 'nullable|file|mimes:ppk,pem,key,txt|max:10240',
             'app_path' => 'nullable|string',
             'cyberpanel_url' => 'nullable|url',
             'cyberpanel_user' => 'nullable|string',
@@ -65,6 +67,12 @@ class ServerController extends Controller
             'replication_user' => 'nullable|string',
             'replication_password' => 'nullable|string',
         ]);
+
+        // Handle SSH key file upload
+        if ($request->hasFile('ssh_key_file') && $validated['ssh_auth_type'] === 'key') {
+            $keyPath = $this->handleSshKeyUpload($request->file('ssh_key_file'), $validated['name']);
+            $validated['ssh_key_file'] = $keyPath;
+        }
 
         // If setting as primary, demote current primary to replica
         if ($validated['role'] === 'primary') {
@@ -106,6 +114,8 @@ class ServerController extends Controller
             'ssh_port' => 'nullable|integer|min:1|max:65535',
             'ssh_user' => 'nullable|string',
             'ssh_password' => 'nullable|string',
+            'ssh_auth_type' => 'required|in:password,key',
+            'ssh_key_file' => 'nullable|file|mimes:ppk,pem,key,txt|max:10240',
             'app_path' => 'nullable|string',
             'cyberpanel_url' => 'nullable|url',
             'cyberpanel_user' => 'nullable|string',
@@ -119,6 +129,12 @@ class ServerController extends Controller
             'replication_user' => 'nullable|string',
             'replication_password' => 'nullable|string',
         ]);
+
+        // Handle SSH key file upload
+        if ($request->hasFile('ssh_key_file') && $validated['ssh_auth_type'] === 'key') {
+            $keyPath = $this->handleSshKeyUpload($request->file('ssh_key_file'), $validated['name']);
+            $validated['ssh_key_file'] = $keyPath;
+        }
 
         // If setting as primary, demote current primary to replica
         if ($validated['role'] === 'primary' && $server->role !== 'primary') {
@@ -345,5 +361,50 @@ class ServerController extends Controller
                 'recorded_at' => $latest->recorded_at->toIso8601String(),
             ],
         ]);
+    }
+
+    /**
+     * Handle SSH key file upload and conversion
+     */
+    private function handleSshKeyUpload($file, string $serverName): string
+    {
+        $keyDir = storage_path('app/ssh-keys');
+        
+        // Create directory if not exists
+        if (!file_exists($keyDir)) {
+            mkdir($keyDir, 0700, true);
+        }
+
+        $originalName = $file->getClientOriginalName();
+        $extension = strtolower($file->getClientOriginalExtension());
+        $keyFileName = $serverName . '_key';
+        $keyPath = $keyDir . '/' . $keyFileName;
+
+        // Read uploaded file content
+        $keyContent = file_get_contents($file->getRealPath());
+
+        // Check if it's PPK format and convert
+        if ($extension === 'ppk' || strpos($keyContent, 'PuTTY-User-Key-File') !== false) {
+            try {
+                // Load PPK key using phpseclib
+                $key = \phpseclib3\Crypt\PublicKeyLoader::load($keyContent);
+                
+                // Convert to OpenSSH format
+                $opensshKey = $key->toString('OpenSSH');
+                
+                // Save converted key
+                file_put_contents($keyPath, $opensshKey);
+                chmod($keyPath, 0600);
+                
+            } catch (\Exception $e) {
+                throw new \Exception("Failed to convert PPK key: " . $e->getMessage());
+            }
+        } else {
+            // Already in OpenSSH/PEM format, just save it
+            file_put_contents($keyPath, $keyContent);
+            chmod($keyPath, 0600);
+        }
+
+        return $keyPath;
     }
 }

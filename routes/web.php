@@ -42,6 +42,18 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('failover/settings', [\App\Http\Controllers\Admin\FailoverController::class, 'updateSettings'])
         ->name('failover.update-settings');
     
+    // Failover Execution
+    Route::get('failover/switch', [\App\Http\Controllers\Admin\FailoverController::class, 'switchPage'])
+        ->name('failover.switch-page');
+    Route::post('failover/execute/web-down', [\App\Http\Controllers\Admin\FailoverController::class, 'executeWebDown'])
+        ->name('failover.execute-web-down');
+    Route::post('failover/execute/db-down', [\App\Http\Controllers\Admin\FailoverController::class, 'executeDbDown'])
+        ->name('failover.execute-db-down');
+    Route::post('failover/execute/complete', [\App\Http\Controllers\Admin\FailoverController::class, 'executeComplete'])
+        ->name('failover.execute-complete');
+    Route::post('failover/execute/rollback', [\App\Http\Controllers\Admin\FailoverController::class, 'executeRollback'])
+        ->name('failover.execute-rollback');
+    
     // Server Management
     Route::resource('servers', \App\Http\Controllers\Admin\ServerController::class);
     Route::patch('servers/{server}/toggle-active', [\App\Http\Controllers\Admin\ServerController::class, 'toggleActive'])

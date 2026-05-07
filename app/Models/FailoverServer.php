@@ -21,6 +21,8 @@ class FailoverServer extends Model
         'ssh_port',
         'ssh_user',
         'ssh_password',
+        'ssh_key_file',
+        'ssh_auth_type',
         'app_path',
         'cyberpanel_url',
         'cyberpanel_user',

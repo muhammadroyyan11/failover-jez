@@ -9,6 +9,9 @@
         <small class="text-muted">Monitor dan kelola failover production server</small>
     </div>
     <div class="d-flex gap-2">
+        <a href="{{ route('admin.failover.switch-page') }}" class="btn btn-sm btn-danger">
+            <i class="bi bi-arrow-repeat me-1"></i>Execute Failover
+        </a>
         <button class="btn btn-sm btn-outline-secondary" id="btnRefresh">
             <i class="bi bi-arrow-clockwise me-1"></i>Refresh
         </button>

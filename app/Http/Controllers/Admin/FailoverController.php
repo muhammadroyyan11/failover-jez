@@ -141,6 +141,128 @@ class FailoverController extends Controller
     }
 
     /**
+     * GET /admin/failover/switch
+     * Halaman untuk execute failover dengan pilihan skenario
+     */
+    public function switchPage(): View
+    {
+        return view('admin.failover.switch');
+    }
+
+    /**
+     * POST /admin/failover/execute/web-down
+     * Execute Scenario 1: Web Server Down
+     */
+    public function executeWebDown(Request $request): JsonResponse
+    {
+        $request->validate([
+            'password_confirm' => 'required|string',
+            'checklist'        => 'required|array|min:4',
+        ]);
+
+        // Verify password
+        if (!Hash::check($request->password_confirm, $request->user()->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password tidak valid.',
+            ], 422);
+        }
+
+        $user = $request->user();
+        $result = $this->failoverService->failoverWebServerDown(
+            $user->id,
+            $user->name,
+            $request->ip()
+        );
+
+        return response()->json($result, $result['success'] ? 200 : 500);
+    }
+
+    /**
+     * POST /admin/failover/execute/db-down
+     * Execute Scenario 2: Database Down
+     */
+    public function executeDbDown(Request $request): JsonResponse
+    {
+        $request->validate([
+            'password_confirm' => 'required|string',
+            'checklist'        => 'required|array|min:4',
+        ]);
+
+        if (!Hash::check($request->password_confirm, $request->user()->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password tidak valid.',
+            ], 422);
+        }
+
+        $user = $request->user();
+        $result = $this->failoverService->failoverDatabaseDown(
+            $user->id,
+            $user->name,
+            $request->ip()
+        );
+
+        return response()->json($result, $result['success'] ? 200 : 500);
+    }
+
+    /**
+     * POST /admin/failover/execute/complete
+     * Execute Scenario 3: Complete Failover
+     */
+    public function executeComplete(Request $request): JsonResponse
+    {
+        $request->validate([
+            'password_confirm' => 'required|string',
+            'checklist'        => 'required|array|min:4',
+        ]);
+
+        if (!Hash::check($request->password_confirm, $request->user()->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password tidak valid.',
+            ], 422);
+        }
+
+        $user = $request->user();
+        $result = $this->failoverService->failoverComplete(
+            $user->id,
+            $user->name,
+            $request->ip()
+        );
+
+        return response()->json($result, $result['success'] ? 200 : 500);
+    }
+
+    /**
+     * POST /admin/failover/execute/rollback
+     * Execute Rollback to VPS A
+     */
+    public function executeRollback(Request $request): JsonResponse
+    {
+        $request->validate([
+            'password_confirm' => 'required|string',
+            'checklist'        => 'required|array|min:4',
+        ]);
+
+        if (!Hash::check($request->password_confirm, $request->user()->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password tidak valid.',
+            ], 422);
+        }
+
+        $user = $request->user();
+        $result = $this->failoverService->failoverToJH(
+            $user->id,
+            $user->name,
+            $request->ip()
+        );
+
+        return response()->json($result, $result['success'] ? 200 : 500);
+    }
+
+    /**
      * GET /admin/failover/logs
      * Daftar semua failover logs.
      */
