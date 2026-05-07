@@ -98,6 +98,7 @@ class ServerController extends Controller
             'agent_url' => 'required|url',
             'domain' => 'nullable|string|max:255',
             'role' => 'required|in:primary,replica',
+            'server_type' => 'required|in:web,database,both',
             'is_active' => 'boolean',
             'priority' => 'required|integer|min:0|max:999',
             'notes' => 'nullable|string',

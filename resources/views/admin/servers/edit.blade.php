@@ -95,7 +95,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="role" class="form-label">Role *</label>
                                 <select class="form-select @error('role') is-invalid @enderror" 
                                         id="role" 
@@ -109,7 +109,23 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
+                                <label for="server_type" class="form-label">Server Type *</label>
+                                <select class="form-select @error('server_type') is-invalid @enderror" 
+                                        id="server_type" 
+                                        name="server_type" 
+                                        required>
+                                    <option value="web" {{ old('server_type', $server->server_type ?? 'web') === 'web' ? 'selected' : '' }}>Web Server</option>
+                                    <option value="database" {{ old('server_type', $server->server_type) === 'database' ? 'selected' : '' }}>Database Only</option>
+                                    <option value="both" {{ old('server_type', $server->server_type) === 'both' ? 'selected' : '' }}>Web + Database</option>
+                                </select>
+                                <small class="text-muted">Web = has Agent API, Database = MySQL only</small>
+                                @error('server_type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-3 mb-3">
                                 <label for="priority" class="form-label">Priority *</label>
                                 <input type="number" 
                                        class="form-control @error('priority') is-invalid @enderror" 
@@ -124,7 +140,7 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="is_active" class="form-label">Status</label>
                                 <div class="form-check form-switch mt-2">
                                     <input class="form-check-input" 
