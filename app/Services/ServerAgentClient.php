@@ -16,17 +16,32 @@ class ServerAgentClient
     private string $hmacSecret;
     private int    $timeout;
 
-    public function __construct(string $server)
+    public function __construct(string $serverNameOrUrl)
     {
         $this->token      = config('failover.agent_token');
         $this->hmacSecret = config('failover.hmac_secret');
         $this->timeout    = config('failover.agent_timeout', 30);
 
-        $this->baseUrl = match ($server) {
-            'jh'      => rtrim(config('failover.jh_agent_url'), '/'),
-            'upcloud' => rtrim(config('failover.upcloud_agent_url'), '/'),
-            default   => throw new \InvalidArgumentException("Unknown server: {$server}"),
-        };
+        // Check if it's a full URL or server name
+        if (filter_var($serverNameOrUrl, FILTER_VALIDATE_URL)) {
+            // Direct URL provided
+            $this->baseUrl = rtrim($serverNameOrUrl, '/');
+        } else {
+            // Server name provided - lookup from database first, then fallback to config
+            $server = \App\Models\FailoverServer::where('name', $serverNameOrUrl)->first();
+            
+            if ($server) {
+                // Found in database
+                $this->baseUrl = rtrim($server->agent_url, '/');
+            } else {
+                // Fallback to config (legacy support)
+                $this->baseUrl = match ($serverNameOrUrl) {
+                    'jh'      => rtrim(config('failover.jh_agent_url'), '/'),
+                    'upcloud' => rtrim(config('failover.upcloud_agent_url'), '/'),
+                    default   => throw new \InvalidArgumentException("Unknown server: {$serverNameOrUrl}"),
+                };
+            }
+        }
     }
 
     /**
