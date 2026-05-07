@@ -1,0 +1,66 @@
+/* Jez Pro Branding */
+:root {
+    --jez-primary: #1e40af;
+    --jez-secondary: #3b82f6;
+    --jez-dark: #1e3a8a;
+}
+
+/* Sidebar with Jez Pro colors */
+.sidebar {
+    background: linear-gradient(180deg, var(--jez-dark) 0%, var(--jez-primary) 100%) !important;
+}
+
+/* Brand section with logo */
+.sidebar .brand {
+    text-align: center;
+    padding: 1.5rem 1rem !important;
+}
+
+.sidebar .brand img {
+    max-width: 140px;
+    height: auto;
+    margin-bottom: 0.75rem;
+    filter: brightness(1.1);
+}
+
+.sidebar .brand h5 {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px;
+}
+
+/* Active nav link */
+.sidebar .nav-link.active {
+    background: rgba(59, 130, 246, 0.3) !important;
+    border-left: 3px solid var(--jez-secondary);
+}
+
+/* Primary buttons */
+.btn-primary {
+    background: var(--jez-primary) !important;
+    border-color: var(--jez-primary) !important;
+}
+
+.btn-primary:hover {
+    background: var(--jez-secondary) !important;
+    border-color: var(--jez-secondary) !important;
+}
+
+/* Cards */
+.server-card {
+    border-top: 3px solid var(--jez-primary) !important;
+}
+
+/* Badges */
+.badge.bg-primary {
+    background: var(--jez-primary) !important;
+}
+
+/* Links */
+a {
+    color: var(--jez-primary);
+}
+
+a:hover {
+    color: var(--jez-secondary);
+}
