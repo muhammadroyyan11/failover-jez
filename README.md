@@ -1,58 +1,419 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Failover Panel
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Panel manajemen failover untuk server production dengan fitur database replication monitoring dan management.
 
-## About Laravel
+## 🎯 Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### ✅ Failover Management
+- Manual failover antara server primary dan replica
+- Real-time server health monitoring
+- DNS switching via Cloudflare API
+- Failover logs dengan detail lengkap
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### ✅ Dynamic Server Management
+- Add/Edit/Delete servers via UI (tidak perlu edit .env)
+- Priority system untuk failover order
+- Toggle active/inactive status
+- Promote server to primary
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### ✅ Database Replication Management
+- **Test Database Connection** - Verify koneksi ke database
+- **Check Replication Status** - Monitor master/slave status real-time
+- Support database terpisah dari web server
+- Master binlog position monitoring
+- Slave replication lag monitoring
+- Replication health indicators
 
-## Learning Laravel
+### ✅ SSH & CyberPanel Integration
+- SSH connection dengan password atau key authentication
+- Remote command execution
+- CyberPanel API integration untuk web server management
+- LiteSpeed restart capability
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### ✅ Security
+- Bearer token + HMAC signature authentication
+- Encrypted passwords (DB, SSH, Replication, CyberPanel)
+- Superadmin role-based access
+- Replay attack prevention
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## 📋 Requirements
 
-## Agentic Development
+- Docker & Docker Compose
+- PHP 8.2+
+- MySQL 8.0+
+- Composer
+- Git
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+---
+
+## 🚀 Installation
+
+### 1. Clone Repository
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/muhammadroyyan11/failover-jez.git
+cd failover-jez
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Copy Environment File
 
-## Contributing
+```bash
+cp .env.example .env
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Edit `.env` dan sesuaikan konfigurasi:
+```env
+APP_NAME="Failover Panel"
+APP_URL=http://localhost:3000
 
-## Code of Conduct
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=failover_panel
+DB_USERNAME=root
+DB_PASSWORD=secret
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Cloudflare DNS
+CLOUDFLARE_ZONE_ID=your_zone_id
+CLOUDFLARE_RECORD_ID=your_record_id
+CLOUDFLARE_API_TOKEN=your_api_token
 
-## Security Vulnerabilities
+# Agent Authentication
+FAILOVER_AGENT_TOKEN=your_secure_token_here
+FAILOVER_HMAC_SECRET=your_hmac_secret_here
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 3. Start Docker Containers
 
-## License
+```bash
+docker compose up -d
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 4. Install Dependencies
+
+```bash
+docker compose exec app composer install
+```
+
+### 5. Generate Application Key
+
+```bash
+docker compose exec app php artisan key:generate
+```
+
+### 6. Run Migrations
+
+```bash
+docker compose exec app php artisan migrate --seed
+```
+
+### 7. Access Panel
+
+```
+http://localhost:3000
+```
+
+**Default Login:**
+- Email: `admin@jezpro.id`
+- Password: `Admin@12345`
+
+---
+
+## 📁 Project Structure
+
+```
+laravel-app/
+├── app/
+│   ├── Console/              # Artisan commands
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Admin/        # Admin controllers
+│   │   │   │   ├── FailoverController.php
+│   │   │   │   └── ServerController.php
+│   │   │   ├── Api/          # API controllers
+│   │   │   └── Auth/         # Authentication
+│   │   └── Middleware/       # Custom middleware
+│   ├── Models/               # Eloquent models
+│   │   ├── FailoverServer.php
+│   │   ├── FailoverSetting.php
+│   │   └── FailoverLog.php
+│   ├── Services/             # Business logic
+│   │   ├── DatabaseReplicationService.php
+│   │   ├── FailoverService.php
+│   │   ├── CloudflareDnsService.php
+│   │   ├── ServerAgentClient.php
+│   │   ├── SshService.php
+│   │   └── CyberPanelService.php
+│   └── Providers/
+├── database/
+│   ├── migrations/           # Database migrations
+│   └── seeders/              # Database seeders
+├── resources/
+│   └── views/
+│       ├── admin/
+│       │   ├── failover/     # Failover views
+│       │   └── servers/      # Server management views
+│       └── auth/             # Login views
+├── routes/
+│   ├── web.php               # Web routes
+│   └── failover.php          # Failover routes
+├── docker-compose.yml        # Docker configuration
+└── Dockerfile                # Docker image
+```
+
+---
+
+## 🎯 Usage
+
+### 1. Manage Servers
+
+**Add New Server:**
+1. Go to **Manage Servers** → **Add New Server**
+2. Fill in server details:
+   - Server Name: `jh` (unique identifier)
+   - Display Label: `VPS JH`
+   - IP Address: `103.245.39.246`
+   - Agent URL: `https://jezpro.id`
+   - Role: `primary` or `replica`
+   - Priority: `100` (higher = preferred)
+
+**SSH Configuration:**
+- SSH Host: `103.245.39.246`
+- SSH Port: `22`
+- SSH User: `root`
+- SSH Password: `***` (encrypted)
+- App Path: `/home/jezpro.id/public_html`
+
+**Database Configuration:**
+- DB Host: `103.245.39.246` (use external IP, NOT localhost)
+- DB Port: `3306`
+- DB Username: `root`
+- DB Password: `***` (encrypted)
+- Database Name: `jez_erp`
+- DB Role: `master` or `slave`
+- Replication User: `repl_user`
+- Replication Password: `***` (encrypted)
+
+**CyberPanel Configuration:**
+- CyberPanel URL: `https://103.245.39.246:8090`
+- Username: `admin`
+- Password: `***` (encrypted)
+
+### 2. Test Database Connection
+
+1. Edit server
+2. Scroll to **Database Configuration** section
+3. Click **"Test DB Connection"**
+4. Alert akan muncul dengan hasil:
+   - ✅ Success: Shows MySQL version
+   - ❌ Failed: Shows error message
+
+### 3. Check Replication Status
+
+1. Edit server (yang sudah diisi DB config)
+2. Click **"Check Replication Status"**
+3. Alert akan muncul dengan:
+   - **Master**: Binlog file & position
+   - **Slave**: IO/SQL running status, seconds behind master
+
+### 4. Monitor Dashboard
+
+Dashboard menampilkan:
+- Server status (online/offline)
+- System metrics (CPU, Memory, Disk)
+- Replication status
+- DNS current target
+- Recent failover logs
+
+### 5. Execute Failover
+
+1. Go to **Dashboard**
+2. Click **"Failover to [Server]"**
+3. Complete checklist:
+   - ✅ Backup database
+   - ✅ Verify replication lag < 10s
+   - ✅ Notify team
+   - ✅ Check DNS propagation
+   - ✅ Confirm downtime window
+4. Enter password confirmation
+5. Click **"Execute Failover"**
+
+---
+
+## 🔧 Configuration
+
+### Docker Networking
+
+**⚠️ Important for Database Connection:**
+
+Jangan gunakan `localhost` atau `127.0.0.1` untuk DB Host karena akan connect ke container itu sendiri.
+
+**Gunakan:**
+- **External IP**: `103.245.39.246` (recommended)
+- **Host Machine**: `host.docker.internal` (Mac/Windows) atau `172.17.0.1` (Linux)
+
+### Environment Variables
+
+```env
+# Failover Settings
+FAILOVER_JH_IP=103.245.39.246
+FAILOVER_UPCLOUD_IP=45.76.123.456
+FAILOVER_PRIMARY_DOMAIN=jezpro.id
+FAILOVER_STANDBY_DOMAIN=jezpro.com
+
+# Agent URLs
+FAILOVER_JH_AGENT_URL=https://jezpro.id
+FAILOVER_UPCLOUD_AGENT_URL=https://jezpro.com
+
+# Authentication
+FAILOVER_AGENT_TOKEN=your_secure_token_here
+FAILOVER_HMAC_SECRET=your_hmac_secret_here
+
+# Cloudflare
+CLOUDFLARE_ZONE_ID=your_zone_id
+CLOUDFLARE_RECORD_ID=your_record_id
+CLOUDFLARE_API_TOKEN=your_api_token
+```
+
+---
+
+## 🗄️ Database Schema
+
+### Table: `failover_servers`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | bigint | Primary key |
+| `name` | varchar | Unique identifier (jh, upcloud) |
+| `label` | varchar | Display name (VPS JH) |
+| `ip_address` | varchar | Server IP |
+| `agent_url` | varchar | Agent API URL |
+| `domain` | varchar | Domain name |
+| `role` | enum | primary/replica |
+| `is_active` | boolean | Active status |
+| `priority` | integer | Failover priority (0-999) |
+| `ssh_host` | varchar | SSH host |
+| `ssh_port` | integer | SSH port |
+| `ssh_user` | varchar | SSH username |
+| `ssh_password` | text | SSH password (encrypted) |
+| `app_path` | varchar | Application path |
+| `db_host` | varchar | Database host |
+| `db_port` | integer | Database port |
+| `db_username` | varchar | Database username |
+| `db_password` | text | Database password (encrypted) |
+| `db_database` | varchar | Database name |
+| `db_role` | enum | standalone/master/slave |
+| `replication_user` | varchar | Replication username |
+| `replication_password` | text | Replication password (encrypted) |
+| `replication_io_running` | boolean | IO thread status |
+| `replication_sql_running` | boolean | SQL thread status |
+| `seconds_behind_master` | integer | Replication lag |
+| `cyberpanel_url` | varchar | CyberPanel URL |
+| `cyberpanel_user` | varchar | CyberPanel username |
+| `cyberpanel_pass` | text | CyberPanel password (encrypted) |
+
+---
+
+## 🔐 Security
+
+### Password Encryption
+
+Semua password fields di-encrypt menggunakan Laravel's `encrypt()`:
+- ✅ `db_password`
+- ✅ `replication_password`
+- ✅ `ssh_password`
+- ✅ `cyberpanel_pass`
+
+### Authentication
+
+Agent API menggunakan:
+1. **Bearer Token** - Static token untuk identifikasi
+2. **HMAC Signature** - Request signing dengan timestamp
+3. **Replay Attack Prevention** - Timestamp tolerance 60 detik
+
+---
+
+## 📊 API Endpoints
+
+### Agent API (Install di Production Server)
+
+```bash
+# Health Check
+GET /api/agent/health
+Authorization: Bearer {token}
+X-Agent-Timestamp: {timestamp}
+X-Agent-Signature: {hmac_signature}
+
+# System Status
+GET /api/agent/system-status
+
+# Replication Status
+GET /api/agent/replication-status
+```
+
+### Panel API
+
+```bash
+# Test Database Connection
+POST /admin/servers/{server}/test-db
+
+# Check Replication Status
+POST /admin/servers/{server}/check-replication
+
+# Setup Replication
+POST /admin/servers/{server}/setup-replication
+
+# Promote Database to Master
+POST /admin/servers/{server}/promote-db
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Error: "No such file or directory"
+
+**Penyebab:** DB Host diisi `localhost` atau `127.0.0.1`
+
+**Solusi:** Gunakan IP external (`103.245.39.246`) atau `host.docker.internal`
+
+### Error: "Connection refused"
+
+**Penyebab:** Database tidak bisa diakses dari Docker container
+
+**Solusi:**
+1. Cek firewall di database server
+2. Pastikan MySQL bind-address = `0.0.0.0` (bukan `127.0.0.1`)
+3. Grant access: `GRANT ALL ON *.* TO 'root'@'%' IDENTIFIED BY 'password';`
+
+### Replication Position Berbeda
+
+**Normal!** Position selalu berubah setiap ada transaksi baru. Yang penting:
+- ✅ File name sama (mysql-bin.000053)
+- ✅ Connection berhasil
+- ✅ Tidak ada error
+
+---
+
+## 📝 License
+
+This project is proprietary software for Jez Pro internal use.
+
+---
+
+## 👨‍💻 Author
+
+**Muhammad Royyan**
+- GitHub: [@muhammadroyyan11](https://github.com/muhammadroyyan11)
+
+---
+
+## 🙏 Acknowledgments
+
+- Laravel Framework
+- Docker
+- Cloudflare API
+- Bootstrap 5
+- MySQL Replication
