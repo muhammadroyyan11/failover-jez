@@ -49,6 +49,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::patch('servers/{server}/promote', [\App\Http\Controllers\Admin\ServerController::class, 'promote'])
         ->name('servers.promote');
     
+    // Server Metrics
+    Route::get('servers/{server}/metrics', [\App\Http\Controllers\Admin\ServerController::class, 'getMetrics'])
+        ->name('servers.metrics');
+    Route::get('servers/{server}/metrics/latest', [\App\Http\Controllers\Admin\ServerController::class, 'getLatestMetrics'])
+        ->name('servers.metrics.latest');
+    
     // Database Replication
     Route::post('servers/{server}/test-db', [\App\Http\Controllers\Admin\ServerController::class, 'testDatabase'])
         ->name('servers.test-db');

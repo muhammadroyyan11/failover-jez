@@ -271,4 +271,79 @@ class ServerController extends Controller
         
         return response()->json($result);
     }
+
+    /**
+     * Show server detail with metrics
+     */
+    public function show(FailoverServer $server)
+    {
+        return view('admin.servers.show', compact('server'));
+    }
+
+    /**
+     * Get server metrics for charts (AJAX)
+     */
+    public function getMetrics(FailoverServer $server, Request $request): JsonResponse
+    {
+        $period = $request->get('period', '24h');
+        $metric = $request->get('metric', 'cpu'); // cpu, memory, disk, network
+        
+        $metrics = \App\Models\ServerMetric::forServer($server->id)
+            ->withinPeriod($period)
+            ->orderBy('recorded_at', 'desc')
+            ->get();
+        
+        // Format data for Chart.js
+        $timestamps = [];
+        $values = [];
+        
+        foreach ($metrics->reverse() as $m) {
+            $timestamps[] = $m->recorded_at->format('H:i');
+            
+            $values[] = match($metric) {
+                'cpu' => $m->cpu_load_1min,
+                'memory' => $m->memory_percent,
+                'disk' => $m->disk_percent,
+                'network_in' => $m->network_rx_bytes,
+                'network_out' => $m->network_tx_bytes,
+                default => $m->cpu_load_1min,
+            };
+        }
+        
+        return response()->json([
+            'success' => true,
+            'timestamps' => $timestamps,
+            'values' => $values,
+            'metric' => $metric,
+            'period' => $period,
+        ]);
+    }
+
+    /**
+     * Get latest metrics summary
+     */
+    public function getLatestMetrics(FailoverServer $server): JsonResponse
+    {
+        $latest = \App\Models\ServerMetric::forServer($server->id)
+            ->orderBy('recorded_at', 'desc')
+            ->first();
+        
+        if (!$latest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No metrics available yet',
+            ]);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'cpu_load' => $latest->cpu_load_1min,
+                'memory_percent' => $latest->memory_percent,
+                'disk_percent' => $latest->disk_percent,
+                'is_online' => $latest->is_online,
+                'recorded_at' => $latest->recorded_at->toIso8601String(),
+            ],
+        ]);
+    }
 }

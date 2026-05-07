@@ -15,7 +15,7 @@ services:
       APP_NAME: "Jezpro Failover Panel"
       APP_ENV: local
       APP_DEBUG: "true"
-      APP_URL: "http://localhost:3000"
+      APP_URL: "http://10.10.20.153:3000"
 
       DB_CONNECTION: mysql
       DB_HOST: mysql

@@ -92,9 +92,15 @@
                                 <span>Binlog File:</span>
                                 <code class="small" data-master-file="{{ $server->id }}">--</code>
                             </div>
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-between mb-2">
                                 <span>Position:</span>
                                 <code class="small" data-master-pos="{{ $server->id }}">--</code>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Replication:</span>
+                                <span data-master-replication="{{ $server->id }}">
+                                    <span class="badge bg-secondary">Unknown</span>
+                                </span>
                             </div>
                             @else
                             <div class="d-flex justify-content-between mb-1">
@@ -147,6 +153,12 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="text-center">
+                        <a href="{{ route('admin.servers.show', $server) }}" class="btn btn-sm btn-outline-primary w-100">
+                            <i class="bi bi-graph-up me-1"></i>View Metrics
+                        </a>
+                    </div>
 
                     @if($server->db_role && $server->db_role !== 'standalone')
                     <div class="border-top pt-2">
@@ -175,16 +187,23 @@
                     @endif
                 @endif
             </div>
-            <div class="card-footer bg-transparent d-flex gap-2 justify-content-between">
+            <div class="card-footer bg-transparent d-flex gap-2 justify-content-between align-items-center">
                 <div class="small text-muted">
                     <i class="bi bi-hdd-network me-1"></i>{{ $server->ip_address }}
                     @if($server->server_type === 'database')
                         <span class="badge bg-secondary ms-1">DB Only</span>
                     @endif
                 </div>
-                <a href="{{ route('admin.servers.edit', $server) }}" class="btn btn-xs btn-outline-secondary btn-sm">
-                    <i class="bi bi-gear"></i> Config
-                </a>
+                <div class="d-flex gap-1">
+                    @if(in_array($server->server_type, ['web', 'both']))
+                        <a href="{{ route('admin.servers.show', $server) }}" class="btn btn-xs btn-outline-info btn-sm" title="View Metrics">
+                            <i class="bi bi-graph-up"></i>
+                        </a>
+                    @endif
+                    <a href="{{ route('admin.servers.edit', $server) }}" class="btn btn-xs btn-outline-secondary btn-sm" title="Config">
+                        <i class="bi bi-gear"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -354,8 +373,13 @@ function updateDatabaseServerCard(serverId, data) {
         if (data.file && data.position) {
             const fileEl = document.querySelector(`[data-master-file="${serverId}"]`);
             const posEl = document.querySelector(`[data-master-pos="${serverId}"]`);
+            const repEl = document.querySelector(`[data-master-replication="${serverId}"]`);
+            
             if (fileEl) fileEl.textContent = data.file;
             if (posEl) posEl.textContent = data.position;
+            if (repEl) {
+                repEl.innerHTML = '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Running</span>';
+            }
         }
         
         // Update slave status

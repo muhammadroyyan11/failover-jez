@@ -252,6 +252,14 @@
                         @endif
 
                         <div class="d-flex gap-2 justify-content-end">
+                            @if(in_array($server->server_type, ['web', 'both']))
+                                <a href="{{ route('admin.servers.show', $server) }}" 
+                                   class="action-btn btn btn-sm {{ $server->isPrimary() ? 'btn-light' : 'btn-outline-info' }}" 
+                                   title="View Metrics">
+                                    <i class="bi bi-graph-up"></i>
+                                </a>
+                            @endif
+                            
                             <a href="{{ route('admin.servers.edit', $server) }}" 
                                class="action-btn btn btn-sm {{ $server->isPrimary() ? 'btn-light' : 'btn-outline-primary' }}" 
                                title="Edit">

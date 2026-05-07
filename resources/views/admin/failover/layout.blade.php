@@ -29,8 +29,9 @@
             background: #1a1d23;
             position: fixed;
             top: 0; left: 0;
-            z-index: 100;
+            z-index: 1000;
             padding-top: 1rem;
+            transition: transform 0.3s ease;
         }
         .sidebar .brand {
             padding: 0.75rem 1.25rem 1.25rem;
@@ -55,6 +56,34 @@
         .main-content {
             margin-left: var(--sidebar-width);
             padding: 1.5rem;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Mobile menu toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: #1a1d23;
+            color: white;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Mobile overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
         }
 
         /* Status cards */
@@ -146,14 +175,74 @@
         /* Log table */
         .log-table td { vertical-align: middle; }
         .log-table .badge { font-size: 0.75rem; }
+
+        /* RESPONSIVE MOBILE */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .sidebar-overlay.show {
+                display: block;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 4rem 1rem 1rem;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            /* Make cards full width on mobile */
+            .col-md-6, .col-lg-4 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            
+            /* Smaller text on mobile */
+            body { font-size: 0.85rem; }
+            h1, .h1 { font-size: 1.5rem; }
+            h4, .h4 { font-size: 1.1rem; }
+            
+            /* Hide sidebar user info on mobile */
+            .sidebar .position-absolute.bottom-0 {
+                display: none;
+            }
+            
+            /* Make table responsive */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Smaller buttons on mobile */
+            .btn-sm {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
+            }
+        }
     </style>
 
     @stack('styles')
 </head>
 <body>
 
+<!-- Mobile Menu Toggle -->
+<button class="mobile-menu-toggle" id="mobileMenuToggle">
+    <i class="bi bi-list fs-4"></i>
+</button>
+
+<!-- Sidebar Overlay (for mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <!-- Sidebar -->
-<nav class="sidebar">
+<nav class="sidebar" id="sidebar">
     <div class="brand">
         <h5><i class="bi bi-shield-check me-2"></i>Failover Panel</h5>
         <small>{{ config('app.name') }}</small>
@@ -228,6 +317,38 @@
 
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Mobile menu toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.getElementById('mobileMenuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    if (toggle && sidebar && overlay) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        });
+        
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        });
+        
+        // Close sidebar when clicking a link on mobile
+        const navLinks = sidebar.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                }
+            });
+        });
+    }
+});
+</script>
 
 @stack('scripts')
 </body>
