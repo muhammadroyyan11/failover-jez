@@ -1,0 +1,13 @@
+# Ignore all SQL backup files
+*.sql
+*.sql.gz
+*.sql.zip
+
+# Ignore log files
+*.log
+
+# Keep scripts and documentation
+!backup.sh
+!restore.sh
+!README.md
+!.gitignore
