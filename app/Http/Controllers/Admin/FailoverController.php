@@ -269,13 +269,48 @@ class FailoverController extends Controller
      * GET /admin/failover/logs
      * Daftar semua failover logs.
      */
-    public function logs(Request $request): View
+    public function logs(Request $request)
     {
-        $logs = FailoverLog::latest()
-            ->when($request->status, fn ($q) => $q->where('status', $request->status))
-            ->paginate(25);
+        if ($request->ajax()) {
+            $logs = FailoverLog::with('triggeredByUser')->latest();
+            
+            return \Yajra\DataTables\Facades\DataTables::of($logs)
+                ->addColumn('status_badge', function ($log) {
+                    $badges = [
+                        'success' => '<span class="badge bg-success">Success</span>',
+                        'failed' => '<span class="badge bg-danger">Failed</span>',
+                        'running' => '<span class="badge bg-warning">Running</span>',
+                    ];
+                    return $badges[$log->status] ?? '<span class="badge bg-secondary">' . ucfirst($log->status) . '</span>';
+                })
+                ->addColumn('action_label', function ($log) {
+                    $labels = [
+                        'complete_failover' => 'Complete Failover',
+                        'rollback_to_vps_a' => 'Rollback to VPS A',
+                        'web_server_failover' => 'Web Server Failover',
+                        'database_failover' => 'Database Failover',
+                    ];
+                    return $labels[$log->action] ?? ucfirst(str_replace('_', ' ', $log->action));
+                })
+                ->addColumn('actions', function ($log) {
+                    return '<a href="' . route('admin.failover.log-detail', $log) . '" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i> Detail
+                    </a>';
+                })
+                ->editColumn('started_at', function ($log) {
+                    return $log->started_at->format('d M Y H:i:s');
+                })
+                ->editColumn('duration_seconds', function ($log) {
+                    return $log->duration_seconds ? $log->duration_seconds . 's' : '-';
+                })
+                ->filterColumn('status', function($query, $keyword) {
+                    $query->where('status', 'like', "%{$keyword}%");
+                })
+                ->rawColumns(['status_badge', 'actions'])
+                ->make(true);
+        }
 
-        return view('admin.failover.logs', compact('logs'));
+        return view('admin.failover.logs');
     }
 
     /**

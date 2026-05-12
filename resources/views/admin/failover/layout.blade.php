@@ -356,15 +356,9 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ route('admin.failover.logs') }}"
-               class="nav-link {{ request()->routeIs('admin.failover.logs*') ? 'active' : '' }}">
-                <i class="bi bi-journal-text"></i> Failover Logs
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ route('admin.failover.settings') }}"
-               class="nav-link {{ request()->routeIs('admin.failover.settings*') ? 'active' : '' }}">
-                <i class="bi bi-gear"></i> Settings
+            <a href="{{ route('admin.failover.switch') }}"
+               class="nav-link {{ request()->routeIs('admin.failover.switch*') ? 'active' : '' }}">
+                <i class="bi bi-arrow-repeat"></i> Execute Failover
             </a>
         </li>
         <li class="nav-item">
@@ -373,13 +367,28 @@
                 <i class="bi bi-hdd-rack"></i> Manage Servers
             </a>
         </li>
+        <li class="nav-item">
+            <a href="{{ route('admin.failover.logs') }}"
+               class="nav-link {{ request()->routeIs('admin.failover.logs*') ? 'active' : '' }}">
+                <i class="bi bi-journal-text"></i> Failover Logs
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('admin.users.index') }}"
+               class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                <i class="bi bi-people"></i> Users
+            </a>
+        </li>
         <li class="nav-item mt-3">
             <hr style="border-color: #e9ecef; margin: 0 1.25rem;">
         </li>
         <li class="nav-item">
-            <a href="{{ url('/') }}" class="nav-link">
-                <i class="bi bi-arrow-left"></i> Kembali ke App
-            </a>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="nav-link btn btn-link text-start w-100" style="text-decoration: none;">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </form>
         </li>
     </ul>
 
@@ -415,6 +424,9 @@
 
     @yield('content')
 </div>
+
+<!-- jQuery (required for DataTables) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

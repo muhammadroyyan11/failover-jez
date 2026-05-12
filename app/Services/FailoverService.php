@@ -393,8 +393,8 @@ class FailoverService
             // ----------------------------------------------------------------
             // STEP 4: Update all server roles
             // ----------------------------------------------------------------
-            $vpsA->update(['role' => 'replica', 'is_active' => false]);
-            $vpsB->update(['role' => 'replica', 'is_active' => false, 'db_role' => 'slave']);
+            $vpsA->update(['role' => 'replica', 'is_active' => true]);
+            $vpsB->update(['role' => 'replica', 'is_active' => true, 'db_role' => 'slave']);
             $vpsC->update(['role' => 'primary', 'is_active' => true, 'db_role' => 'master']);
             
             $log->addStep('update_roles', 'success', 'All roles updated');

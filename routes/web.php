@@ -76,5 +76,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         ->name('servers.setup-replication');
     Route::post('servers/{server}/promote-db', [\App\Http\Controllers\Admin\ServerController::class, 'promoteDatabase'])
         ->name('servers.promote-db');
+    
+    // User Management
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
 });
 
