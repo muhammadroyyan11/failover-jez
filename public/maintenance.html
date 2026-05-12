@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Sedang Dalam Perbaikan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                        url('westham.jpeg') center/cover no-repeat fixed;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .maintenance-container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(76, 175, 80, 0.5);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: checkmark 0.8s ease-in-out;
+        }
+
+        @keyframes checkmark {
+            0% {
+                transform: scale(0) rotate(-45deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2) rotate(0deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            color: #4CAF50;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            color: #fff;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            margin: 20px auto;
+        }
+
+        .checkmark {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: block;
+            stroke-width: 3;
+            stroke: #4CAF50;
+            stroke-miterlimit: 10;
+            box-shadow: inset 0px 0px 0px #4CAF50;
+            animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+            position: relative;
+            margin: 20px auto;
+        }
+
+        .checkmark__circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 3;
+            stroke-miterlimit: 10;
+            stroke: #4CAF50;
+            fill: rgba(76, 175, 80, 0.2);
+            animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+
+        .checkmark__check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+
+        @keyframes stroke {
+            100% {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @keyframes scale {
+            0%, 100% {
+                transform: none;
+            }
+            50% {
+                transform: scale3d(1.1, 1.1, 1);
+            }
+        }
+
+        @keyframes fill {
+            100% {
+                box-shadow: inset 0px 0px 0px 40px #4CAF50;
+            }
+        }
+
+        .info {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .info p {
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .info p:last-child {
+            margin-bottom: 0;
+        }
+
+        .contact {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #F3D459;
+        }
+
+        .contact a {
+            color: #F3D459;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .contact a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+
+            .maintenance-container {
+                padding: 30px 20px;
+            }
+
+            .icon {
+                font-size: 60px;
+            }
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(243, 212, 89, 0.5);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 20%; animation-delay: 2s; }
+        .particle:nth-child(3) { left: 30%; animation-delay: 4s; }
+        .particle:nth-child(4) { left: 40%; animation-delay: 6s; }
+        .particle:nth-child(5) { left: 50%; animation-delay: 8s; }
+        .particle:nth-child(6) { left: 60%; animation-delay: 10s; }
+        .particle:nth-child(7) { left: 70%; animation-delay: 12s; }
+        .particle:nth-child(8) { left: 80%; animation-delay: 14s; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 16s; }
+    </style>
+</head>
+<body>
+    <!-- Animated particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="maintenance-container">
+        <div class="icon">✅</div>
+        <h1>Failover Migration Berhasil!</h1>
+        <p>
+            Server backup telah aktif dan sistem berjalan normal. 
+            Terima kasih atas kesabaran Anda.
+        </p>
+        
+        <div class="loader">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+        </div>
+        
+        <div class="info">
+            <p><strong>✅ Status:</strong> Failover Migration Success</p>
+            <p><strong>�️ Server Aktif:</strong> Backup Server (UPCLOUD)</p>
+            <p><strong>� Database:</strong> Synchronized & Ready</p>
+        </div>
+
+        <div class="contact">
+            <p style="color: #4CAF50; font-size: 1.1rem; margin-top: 20px;">
+                <strong>🎉 Website akan kembali normal dalam beberapa saat...</strong>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Auto refresh setiap 30 detik untuk cek apakah website sudah kembali
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+
+        // Update waktu secara real-time
+        let startTime = new Date();
+        setInterval(function() {
+            let now = new Date();
+            let elapsed = Math.floor((now - startTime) / 1000);
+            let minutes = Math.floor(elapsed / 60);
+            let seconds = elapsed % 60;
+            
+            // Optional: Update progress text
+            // document.querySelector('.info p:last-child').innerHTML = 
+            //     '<strong>⏱️ Waktu Berlalu:</strong> ' + minutes + ' menit ' + seconds + ' detik';
+        }, 1000);
+    </script>
+</body>
+</html>

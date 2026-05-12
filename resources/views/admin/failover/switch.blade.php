@@ -22,36 +22,120 @@
                     Pastikan Anda memahami konsekuensi dari setiap skenario sebelum melanjutkan.
                 </div>
 
+                {{-- TARGET SERVER SELECTION --}}
+                <div class="card mb-4 bg-light">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-server me-2"></i>Pilih Target Server Failover:</h6>
+                        <div class="row">
+                            @foreach($servers as $server)
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="target_server" 
+                                           id="server_{{ $server->id }}" value="{{ $server->id }}"
+                                           data-name="{{ $server->name }}"
+                                           data-label="{{ $server->label }}"
+                                           data-ip="{{ $server->ip_address }}"
+                                           {{ $server->role === 'replica' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="server_{{ $server->id }}">
+                                        <strong>{{ $server->label }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="bi bi-hdd-network me-1"></i>{{ $server->ip_address }}
+                                            <br>
+                                            <span class="badge bg-{{ $server->role === 'primary' ? 'success' : 'info' }}">
+                                                {{ strtoupper($server->role) }}
+                                            </span>
+                                            <span class="badge bg-secondary">{{ strtoupper($server->server_type) }}</span>
+                                        </small>
+                                    </label>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                        <div id="selectedServerInfo" class="alert alert-info mt-2" style="display:none;">
+                            <strong>Target dipilih:</strong> <span id="selectedServerLabel"></span> (<span id="selectedServerIp"></span>)
+                        </div>
+                    </div>
+                </div>
+
                 <h6 class="fw-bold mb-3">Pilih Skenario Failover:</h6>
 
-                {{-- SCENARIO 1: Web Server Down --}}
-                <div class="card mb-3 border-primary">
-                    <div class="card-header bg-primary text-white">
+                {{-- SCENARIO 1: Complete Failover --}}
+                <div class="card mb-3 border-danger">
+                    <div class="card-header bg-danger text-white">
                         <h6 class="mb-0 text-white">
-                            <i class="bi bi-1-circle me-2"></i>Skenario 1: VPS A (Web Server) Down
+                            <i class="bi bi-1-circle me-2"></i>Skenario 1: VPS A & B Down (Complete Failover)
                         </h6>
                     </div>
                     <div class="card-body">
-                        <p class="mb-2"><strong>Kondisi:</strong> VPS A (jezpro.id) tidak dapat diakses, tetapi VPS B (database) masih berjalan normal.</p>
-                        <p class="mb-2"><strong>Solusi:</strong> Switch DNS ke VPS C (UPCLOUD). VPS C akan menggunakan MySQL replica lokal.</p>
+                        <p class="mb-2"><strong>Kondisi:</strong> Baik VPS A (web) maupun VPS B (database) tidak dapat diakses.</p>
+                        <p class="mb-2"><strong>Solusi:</strong> Full failover ke VPS C. VPS C menjadi standalone primary.</p>
                         <p class="mb-3"><strong>Dampak:</strong></p>
                         <ul class="small mb-3">
-                            <li>DNS jezpro.id akan diarahkan ke IP VPS C</li>
-                            <li>VPS C menjadi primary web server</li>
-                            <li>VPS B tetap sebagai database master</li>
-                            <li>Tidak ada perubahan database</li>
+                            <li>VPS C MySQL dipromote menjadi master</li>
+                            <li><strong class="text-success">AUTO:</strong> VPS B dikonfigurasi sebagai slave dari VPS C (jika online)</li>
+                            <li>DNS jezpro.zona-karya.id diarahkan ke IP VPS C</li>
+                            <li>VPS C menjadi primary untuk web dan database</li>
+                            <li>Operasi standalone di VPS C</li>
                         </ul>
-                        <button class="btn btn-primary" onclick="showConfirmModal('web_server_down')">
+                        <button class="btn btn-danger" onclick="showConfirmModal('complete_failover')">
                             <i class="bi bi-arrow-repeat me-1"></i>Execute Skenario 1
                         </button>
                     </div>
                 </div>
 
-                {{-- SCENARIO 2: Database Down --}}
+                {{-- SCENARIO 2: Rollback --}}
+                <div class="card mb-3 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0 text-white">
+                            <i class="bi bi-2-circle me-2"></i>Skenario 2: Rollback ke VPS A
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Kondisi:</strong> VPS A dan VPS B sudah kembali normal, ingin rollback dari VPS C.</p>
+                        <p class="mb-2"><strong>Solusi:</strong> Switch DNS kembali ke VPS A, reconfigure replication VPS B → VPS C.</p>
+                        <p class="mb-3"><strong>Dampak:</strong></p>
+                        <ul class="small mb-3">
+                            <li>DNS jezpro.zona-karya.id diarahkan kembali ke IP VPS A</li>
+                            <li>VPS A kembali menjadi primary web server</li>
+                            <li>VPS B kembali menjadi database master</li>
+                            <li><strong class="text-success">AUTO:</strong> Replication VPS B → VPS C dikonfigurasi otomatis</li>
+                            <li><strong class="text-warning">MANUAL (jika auto gagal):</strong> Reconfigure replication manual</li>
+                        </ul>
+                        <button class="btn btn-success" onclick="showConfirmModal('rollback')">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Execute Skenario 2
+                        </button>
+                    </div>
+                </div>
+
+                {{-- SCENARIO 3: Web Server Down --}}
+                <div class="card mb-3 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0 text-white">
+                            <i class="bi bi-3-circle me-2"></i>Skenario 3: VPS A (Web Server) Down
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Kondisi:</strong> VPS A (jezpro.zona-karya.id) tidak dapat diakses, tetapi VPS B (database) masih berjalan normal.</p>
+                        <p class="mb-2"><strong>Solusi:</strong> Switch DNS ke VPS C (UPCLOUD). VPS C akan menggunakan MySQL replica lokal.</p>
+                        <p class="mb-3"><strong>Dampak:</strong></p>
+                        <ul class="small mb-3">
+                            <li>DNS jezpro.zona-karya.id akan diarahkan ke IP VPS C</li>
+                            <li>VPS C menjadi primary web server</li>
+                            <li>VPS B tetap sebagai database master</li>
+                            <li>Tidak ada perubahan database</li>
+                        </ul>
+                        <button class="btn btn-primary" onclick="showConfirmModal('web_server_down')">
+                            <i class="bi bi-arrow-repeat me-1"></i>Execute Skenario 3
+                        </button>
+                    </div>
+                </div>
+
+                {{-- SCENARIO 4: Database Down --}}
                 <div class="card mb-3 border-warning">
                     <div class="card-header bg-warning text-white">
                         <h6 class="mb-0 text-white">
-                            <i class="bi bi-2-circle me-2"></i>Skenario 2: VPS B (Database) Down
+                            <i class="bi bi-4-circle me-2"></i>Skenario 4: VPS B (Database) Down
                         </h6>
                     </div>
                     <div class="card-body">
@@ -66,55 +150,7 @@
                             <li>VPS A perlu restart aplikasi setelah .env diupdate</li>
                         </ul>
                         <button class="btn btn-warning" onclick="showConfirmModal('database_down')">
-                            <i class="bi bi-arrow-repeat me-1"></i>Execute Skenario 2
-                        </button>
-                    </div>
-                </div>
-
-                {{-- SCENARIO 3: Complete Failover --}}
-                <div class="card mb-3 border-danger">
-                    <div class="card-header bg-danger text-white">
-                        <h6 class="mb-0 text-white">
-                            <i class="bi bi-3-circle me-2"></i>Skenario 3: VPS A & B Down (Complete Failover)
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-2"><strong>Kondisi:</strong> Baik VPS A (web) maupun VPS B (database) tidak dapat diakses.</p>
-                        <p class="mb-2"><strong>Solusi:</strong> Full failover ke VPS C. VPS C menjadi standalone primary.</p>
-                        <p class="mb-3"><strong>Dampak:</strong></p>
-                        <ul class="small mb-3">
-                            <li>VPS C MySQL dipromote menjadi master</li>
-                            <li><strong class="text-success">AUTO:</strong> VPS B dikonfigurasi sebagai slave dari VPS C (jika online)</li>
-                            <li>DNS jezpro.id diarahkan ke IP VPS C</li>
-                            <li>VPS C menjadi primary untuk web dan database</li>
-                            <li>Operasi standalone di VPS C</li>
-                        </ul>
-                        <button class="btn btn-danger" onclick="showConfirmModal('complete_failover')">
-                            <i class="bi bi-arrow-repeat me-1"></i>Execute Skenario 3
-                        </button>
-                    </div>
-                </div>
-
-                {{-- ROLLBACK --}}
-                <div class="card border-success">
-                    <div class="card-header bg-success text-white">
-                        <h6 class="mb-0 text-white">
-                            <i class="bi bi-arrow-counterclockwise me-2"></i>Rollback: Kembali ke VPS A
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-2"><strong>Kondisi:</strong> VPS A dan VPS B sudah kembali normal, ingin rollback dari VPS C.</p>
-                        <p class="mb-2"><strong>Solusi:</strong> Switch DNS kembali ke VPS A, reconfigure replication VPS B → VPS C.</p>
-                        <p class="mb-3"><strong>Dampak:</strong></p>
-                        <ul class="small mb-3">
-                            <li>DNS jezpro.id diarahkan kembali ke IP VPS A</li>
-                            <li>VPS A kembali menjadi primary web server</li>
-                            <li>VPS B kembali menjadi database master</li>
-                            <li><strong class="text-success">AUTO:</strong> Replication VPS B → VPS C dikonfigurasi otomatis</li>
-                            <li><strong class="text-warning">MANUAL (jika auto gagal):</strong> Reconfigure replication manual</li>
-                        </ul>
-                        <button class="btn btn-success" onclick="showConfirmModal('rollback')">
-                            <i class="bi bi-arrow-counterclockwise me-1"></i>Execute Rollback
+                            <i class="bi bi-arrow-repeat me-1"></i>Execute Skenario 4
                         </button>
                     </div>
                 </div>
@@ -212,42 +248,87 @@
 <script>
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 let currentScenario = '';
+let selectedServerId = null;
+let selectedServerName = '';
 
 const scenarios = {
-    'web_server_down': {
-        title: 'Skenario 1: VPS A (Web Server) Down',
-        url: '{{ route("admin.failover.execute-web-down") }}',
-        color: 'primary'
-    },
-    'database_down': {
-        title: 'Skenario 2: VPS B (Database) Down',
-        url: '{{ route("admin.failover.execute-db-down") }}',
-        color: 'warning'
-    },
     'complete_failover': {
-        title: 'Skenario 3: Complete Failover',
+        title: 'Skenario 1: Complete Failover (VPS A & B Down)',
         url: '{{ route("admin.failover.execute-complete") }}',
         color: 'danger'
     },
     'rollback': {
-        title: 'Rollback ke VPS A',
+        title: 'Skenario 2: Rollback ke VPS A',
         url: '{{ route("admin.failover.execute-rollback") }}',
         color: 'success'
+    },
+    'web_server_down': {
+        title: 'Skenario 3: VPS A (Web Server) Down',
+        url: '{{ route("admin.failover.execute-web-down") }}',
+        color: 'primary'
+    },
+    'database_down': {
+        title: 'Skenario 4: VPS B (Database) Down',
+        url: '{{ route("admin.failover.execute-db-down") }}',
+        color: 'warning'
     }
 };
 
+// Handle target server selection
+document.addEventListener('DOMContentLoaded', function() {
+    const serverRadios = document.querySelectorAll('input[name="target_server"]');
+    
+    serverRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            selectedServerId = this.value;
+            selectedServerName = this.dataset.name;
+            
+            const label = this.dataset.label;
+            const ip = this.dataset.ip;
+            
+            document.getElementById('selectedServerLabel').textContent = label;
+            document.getElementById('selectedServerIp').textContent = ip;
+            document.getElementById('selectedServerInfo').style.display = 'block';
+        });
+    });
+    
+    // Auto-select first replica server
+    const firstReplica = document.querySelector('input[name="target_server"]:checked');
+    if (firstReplica) {
+        firstReplica.dispatchEvent(new Event('change'));
+    }
+});
+
 function showConfirmModal(scenario) {
+    if (!selectedServerId) {
+        alert('Pilih target server terlebih dahulu!');
+        return;
+    }
+    
     currentScenario = scenario;
     const scenarioData = scenarios[scenario];
     
     document.getElementById('selectedScenario').innerHTML = `
         <i class="bi bi-arrow-repeat me-2"></i><strong>${scenarioData.title}</strong>
+        <br><small class="text-muted">Target: ${document.getElementById('selectedServerLabel').textContent} (${document.getElementById('selectedServerIp').textContent})</small>
     `;
     
     document.getElementById('failoverForm').action = scenarioData.url;
     
+    // Add hidden input for target server
+    let targetInput = document.getElementById('target_server_input');
+    if (!targetInput) {
+        targetInput = document.createElement('input');
+        targetInput.type = 'hidden';
+        targetInput.id = 'target_server_input';
+        targetInput.name = 'target_server_id';
+        document.getElementById('failoverForm').appendChild(targetInput);
+    }
+    targetInput.value = selectedServerId;
+    
     // Reset form
     document.getElementById('failoverForm').reset();
+    targetInput.value = selectedServerId; // Restore after reset
     
     const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
     modal.show();

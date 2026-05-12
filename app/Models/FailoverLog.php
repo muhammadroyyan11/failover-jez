@@ -60,7 +60,7 @@ class FailoverLog extends Model
         $this->update([
             'status'           => 'success',
             'finished_at'      => now(),
-            'duration_seconds' => now()->diffInSeconds($this->started_at),
+            'duration_seconds' => $this->started_at->diffInSeconds(now()),
             'message'          => $message,
             'payload'          => array_merge($this->payload ?? [], $payload),
         ]);
@@ -74,7 +74,7 @@ class FailoverLog extends Model
         $this->update([
             'status'           => 'failed',
             'finished_at'      => now(),
-            'duration_seconds' => now()->diffInSeconds($this->started_at),
+            'duration_seconds' => $this->started_at->diffInSeconds(now()),
             'message'          => $message,
             'payload'          => array_merge($this->payload ?? [], $payload),
         ]);

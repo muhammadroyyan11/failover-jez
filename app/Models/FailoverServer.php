@@ -31,6 +31,8 @@ class FailoverServer extends Model
         'db_port',
         'db_username',
         'db_password',
+        'db_root_username',
+        'db_root_password',
         'db_database',
         'replication_user',
         'replication_password',
@@ -54,6 +56,7 @@ class FailoverServer extends Model
 
     protected $hidden = [
         'db_password',
+        'db_root_password',
         'replication_password',
         'cyberpanel_pass',
         'ssh_password',
@@ -145,6 +148,19 @@ class FailoverServer extends Model
     }
 
     public function getReplicationPasswordAttribute($value)
+    {
+        return $value ? decrypt($value) : null;
+    }
+
+    /**
+     * Encrypt/Decrypt root password
+     */
+    public function setDbRootPasswordAttribute($value)
+    {
+        $this->attributes['db_root_password'] = $value ? encrypt($value) : null;
+    }
+
+    public function getDbRootPasswordAttribute($value)
     {
         return $value ? decrypt($value) : null;
     }

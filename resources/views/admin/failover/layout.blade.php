@@ -87,18 +87,43 @@
         }
 
         /* Mobile menu toggle */
-        .mobile-menu-toggle {
+        .mobile-header {
             display: none;
             position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 1001;
-            background: var(--color-primary);
-            color: white;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #ffffff;
+            border-bottom: 2px solid #f0f0f0;
+            z-index: 1002;
+            padding: 0 1rem;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .mobile-menu-toggle {
+            background: transparent;
             border: none;
-            padding: 0.5rem 0.75rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(227, 30, 36, 0.3);
+            color: #1a1d23;
+            padding: 0.5rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .mobile-logo {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .mobile-spacer {
+            width: 40px; /* Same width as hamburger button for centering */
         }
 
         /* Mobile overlay */
@@ -230,8 +255,13 @@
 
         /* RESPONSIVE MOBILE */
         @media (max-width: 768px) {
+            .mobile-header {
+                display: flex;
+            }
+            
             .sidebar {
                 transform: translateX(-100%);
+                top: 0;
             }
             
             .sidebar.show {
@@ -244,11 +274,8 @@
             
             .main-content {
                 margin-left: 0;
-                padding: 4rem 1rem 1rem;
-            }
-            
-            .mobile-menu-toggle {
-                display: block;
+                padding: 1rem;
+                padding-top: 70px; /* Space for mobile header */
             }
             
             /* Make cards full width on mobile */
@@ -278,6 +305,18 @@
                 font-size: 0.75rem;
                 padding: 0.25rem 0.5rem;
             }
+            
+            /* Adjust header spacing on mobile */
+            .d-flex.justify-content-between.align-items-center.mb-4 {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 1rem;
+            }
+            
+            .d-flex.justify-content-between.align-items-center.mb-4 > div:last-child {
+                width: 100%;
+                flex-wrap: wrap;
+            }
         }
     </style>
 
@@ -285,10 +324,16 @@
 </head>
 <body>
 
-<!-- Mobile Menu Toggle -->
-<button class="mobile-menu-toggle" id="mobileMenuToggle">
-    <i class="bi bi-list fs-4"></i>
-</button>
+<!-- Mobile Header (only visible on mobile) -->
+<div class="mobile-header">
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <i class="bi bi-list"></i>
+    </button>
+    <div class="mobile-logo">
+        <img src="{{ asset('logo/jez_pro.png') }}" alt="JezPro Logo" style="height: 28px; width: auto;">
+    </div>
+    <div class="mobile-spacer"></div>
+</div>
 
 <!-- Sidebar Overlay (for mobile) -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -297,11 +342,11 @@
 <nav class="sidebar" id="sidebar">
     <div class="brand">
         <div class="d-flex align-items-center gap-3 mb-1">
-            <img src="{{ asset('logo/jez_pro.png') }}" alt="JezPro Logo" style="height: 40px; width: auto;">
+            <img src="{{ asset('logo/jez_pro.png') }}" alt="JezPro Logo" style="height: 30px; width: auto; margin-left:15px;">
             <div>
             </div>
         </div>
-        <small style="padding-left: 0;">Jezpro Failover Panel</small>
+        <small style="padding-left: 0; margin-left:15px;">Jezpro Failover Panel</small>
     </div>
     <ul class="nav flex-column">
         <li class="nav-item">

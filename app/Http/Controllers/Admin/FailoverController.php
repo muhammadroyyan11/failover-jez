@@ -146,7 +146,10 @@ class FailoverController extends Controller
      */
     public function switchPage(): View
     {
-        return view('admin.failover.switch');
+        // Get all active servers for target selection
+        $servers = \App\Models\FailoverServer::active()->get();
+        
+        return view('admin.failover.switch', compact('servers'));
     }
 
     /**

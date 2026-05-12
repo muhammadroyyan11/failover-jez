@@ -299,7 +299,7 @@ class FailoverService
             // ----------------------------------------------------------------
             // STEP 1: Promote VPS C MySQL to master
             // ----------------------------------------------------------------
-            $log->addStep('promote_database', 'running', 'Promote VPS C MySQL...');
+            $log->addStep('promote_database', 'running', 'Promote VPS C MySQL ke master...');
             
             $promoteResult = $this->dbReplication->promoteToMaster($vpsC);
             
@@ -310,19 +310,21 @@ class FailoverService
                 return $this->failResult($log->id, $error, $steps);
             }
 
-            $log->addStep('promote_database', 'success', 'VPS C MySQL is master');
+            $log->addStep('promote_database', 'success', 'VPS C MySQL is now master');
             $steps[] = ['step' => 'promote_database', 'status' => 'success'];
 
             // ----------------------------------------------------------------
-            // STEP 1b: Configure VPS B as slave from VPS C (if VPS B is online)
+            // STEP 1b: Configure VPS B as slave from VPS C (reverse replication)
             // ----------------------------------------------------------------
             if ($vpsB && $vpsB->is_active) {
                 $log->addStep('reverse_replication', 'running', 'Configure VPS B sebagai slave dari VPS C...');
                 
                 try {
+                    // Get master status from VPS C
                     $masterStatus = $this->dbReplication->getMasterStatus($vpsC);
                     
                     if ($masterStatus['success']) {
+                        // Configure VPS B as slave
                         $slaveResult = $this->dbReplication->configureSlave(
                             $vpsB,
                             $vpsC->ip_address,
@@ -333,22 +335,22 @@ class FailoverService
                         );
                         
                         if ($slaveResult['success']) {
-                            $log->addStep('reverse_replication', 'success', 'VPS B → VPS C replication configured');
+                            $log->addStep('reverse_replication', 'success', 'VPS B configured as slave from VPS C');
                             $steps[] = ['step' => 'reverse_replication', 'status' => 'success'];
                         } else {
-                            $log->addStep('reverse_replication', 'warning', 'Gagal: ' . ($slaveResult['error'] ?? 'Unknown'));
-                            $steps[] = ['step' => 'reverse_replication', 'status' => 'warning'];
+                            $log->addStep('reverse_replication', 'warning', 'Gagal configure VPS B: ' . ($slaveResult['error'] ?? 'Unknown'));
+                            $steps[] = ['step' => 'reverse_replication', 'status' => 'warning', 'detail' => 'Perlu manual setup'];
                         }
                     } else {
-                        $log->addStep('reverse_replication', 'warning', 'Gagal get master status');
-                        $steps[] = ['step' => 'reverse_replication', 'status' => 'warning'];
+                        $log->addStep('reverse_replication', 'warning', 'Gagal get master status VPS C');
+                        $steps[] = ['step' => 'reverse_replication', 'status' => 'warning', 'detail' => 'Perlu manual setup'];
                     }
                 } catch (\Throwable $e) {
                     $log->addStep('reverse_replication', 'warning', 'Error: ' . $e->getMessage());
-                    $steps[] = ['step' => 'reverse_replication', 'status' => 'warning'];
+                    $steps[] = ['step' => 'reverse_replication', 'status' => 'warning', 'detail' => 'Perlu manual setup'];
                 }
             } else {
-                $log->addStep('reverse_replication', 'skipped', 'VPS B offline');
+                $log->addStep('reverse_replication', 'skipped', 'VPS B offline, skip reverse replication');
                 $steps[] = ['step' => 'reverse_replication', 'status' => 'skipped'];
             }
 
@@ -356,13 +358,19 @@ class FailoverService
             // STEP 2: Clear cache VPS C
             // ----------------------------------------------------------------
             $log->addStep('clear_cache', 'running', 'Clear cache VPS C...');
-            $cacheResult = $ucAgent->clearCache();
             
-            if ($cacheResult['success'] ?? false) {
-                $log->addStep('clear_cache', 'success', 'Cache cleared');
-                $steps[] = ['step' => 'clear_cache', 'status' => 'success'];
-            } else {
-                $log->addStep('clear_cache', 'warning', 'Cache clear gagal');
+            try {
+                $cacheResult = $ucAgent->clearCache();
+                
+                if ($cacheResult['success'] ?? false) {
+                    $log->addStep('clear_cache', 'success', 'Cache cleared');
+                    $steps[] = ['step' => 'clear_cache', 'status' => 'success'];
+                } else {
+                    $log->addStep('clear_cache', 'warning', 'Cache clear gagal (agent not installed?)');
+                    $steps[] = ['step' => 'clear_cache', 'status' => 'warning'];
+                }
+            } catch (\Throwable $e) {
+                $log->addStep('clear_cache', 'warning', 'Cache clear error: ' . $e->getMessage());
                 $steps[] = ['step' => 'clear_cache', 'status' => 'warning'];
             }
 
@@ -396,13 +404,19 @@ class FailoverService
             // STEP 5: Restart queue VPS C
             // ----------------------------------------------------------------
             $log->addStep('restart_queue', 'running', 'Restart queue VPS C...');
-            $queueResult = $ucAgent->restartQueue();
             
-            if ($queueResult['success'] ?? false) {
-                $log->addStep('restart_queue', 'success', 'Queue restarted');
-                $steps[] = ['step' => 'restart_queue', 'status' => 'success'];
-            } else {
-                $log->addStep('restart_queue', 'warning', 'Queue restart gagal');
+            try {
+                $queueResult = $ucAgent->restartQueue();
+                
+                if ($queueResult['success'] ?? false) {
+                    $log->addStep('restart_queue', 'success', 'Queue restarted');
+                    $steps[] = ['step' => 'restart_queue', 'status' => 'success'];
+                } else {
+                    $log->addStep('restart_queue', 'warning', 'Queue restart gagal');
+                    $steps[] = ['step' => 'restart_queue', 'status' => 'warning'];
+                }
+            } catch (\Throwable $e) {
+                $log->addStep('restart_queue', 'warning', 'Queue restart error: ' . $e->getMessage());
                 $steps[] = ['step' => 'restart_queue', 'status' => 'warning'];
             }
 
@@ -411,7 +425,7 @@ class FailoverService
             return [
                 'success' => true,
                 'log_id'  => $log->id,
-                'message' => 'Complete failover berhasil. VPS C sekarang standalone primary.',
+                'message' => '✅ Complete failover berhasil! VPS C sekarang primary (web + database master).',
                 'steps'   => $steps,
             ];
 
@@ -453,33 +467,49 @@ class FailoverService
             // STEP 1: Verify VPS A is online
             // ----------------------------------------------------------------
             $log->addStep('check_vps_a', 'running', 'Cek VPS A online...');
-            $healthResult = $jhAgent->health();
             
-            if (!($healthResult['reachable'] ?? false)) {
-                $error = 'VPS A tidak reachable';
+            try {
+                $healthResult = $jhAgent->health();
+                
+                if (!($healthResult['reachable'] ?? false)) {
+                    $error = 'VPS A tidak reachable';
+                    $log->addStep('check_vps_a', 'failed', $error);
+                    $log->markFailed($error);
+                    return $this->failResult($log->id, $error, $steps);
+                }
+
+                $log->addStep('check_vps_a', 'success', 'VPS A online');
+                $steps[] = ['step' => 'check_vps_a', 'status' => 'success'];
+            } catch (\Throwable $e) {
+                $error = 'VPS A health check error: ' . $e->getMessage();
                 $log->addStep('check_vps_a', 'failed', $error);
                 $log->markFailed($error);
                 return $this->failResult($log->id, $error, $steps);
             }
 
-            $log->addStep('check_vps_a', 'success', 'VPS A online');
-            $steps[] = ['step' => 'check_vps_a', 'status' => 'success'];
-
             // ----------------------------------------------------------------
             // STEP 2: Verify VPS B is online
             // ----------------------------------------------------------------
             $log->addStep('check_vps_b', 'running', 'Cek VPS B online...');
-            $dbTest = $this->dbReplication->testConnection($vpsB);
             
-            if (!$dbTest['success']) {
-                $error = 'VPS B database tidak reachable';
+            try {
+                $dbTest = $this->dbReplication->testConnection($vpsB);
+                
+                if (!$dbTest['success']) {
+                    $error = 'VPS B database tidak reachable';
+                    $log->addStep('check_vps_b', 'failed', $error);
+                    $log->markFailed($error);
+                    return $this->failResult($log->id, $error, $steps);
+                }
+
+                $log->addStep('check_vps_b', 'success', 'VPS B online');
+                $steps[] = ['step' => 'check_vps_b', 'status' => 'success'];
+            } catch (\Throwable $e) {
+                $error = 'VPS B connection error: ' . $e->getMessage();
                 $log->addStep('check_vps_b', 'failed', $error);
                 $log->markFailed($error);
                 return $this->failResult($log->id, $error, $steps);
             }
-
-            $log->addStep('check_vps_b', 'success', 'VPS B online');
-            $steps[] = ['step' => 'check_vps_b', 'status' => 'success'];
 
             // ----------------------------------------------------------------
             // STEP 3: Reconfigure replication VPS B → VPS C
@@ -487,41 +517,53 @@ class FailoverService
             $log->addStep('reconfigure_replication', 'running', 'Reconfigure replication VPS B → VPS C...');
             
             try {
-                // First, stop slave on VPS B (if it was slave from VPS C)
-                $this->dbReplication->promoteToMaster($vpsB);
+                // First, promote VPS B back to master (stop slave if it was slave from VPS C)
+                $promoteB = $this->dbReplication->promoteToMaster($vpsB);
                 
-                // Get master status from VPS B
-                $masterStatus = $this->dbReplication->getMasterStatus($vpsB);
-                
-                if ($masterStatus['success']) {
-                    // Configure VPS C as slave from VPS B
-                    $slaveResult = $this->dbReplication->configureSlave(
-                        $vpsC,
-                        $vpsB->ip_address,
-                        $vpsB->replication_user ?? 'replication',
-                        $vpsB->replication_password ?? '',
-                        $masterStatus['file'],
-                        $masterStatus['position']
-                    );
+                if (!$promoteB['success']) {
+                    $log->addStep('reconfigure_replication', 'warning', 'Gagal promote VPS B: ' . ($promoteB['error'] ?? 'Unknown'));
+                    $steps[] = [
+                        'step' => 'reconfigure_replication',
+                        'status' => 'warning',
+                        'detail' => 'Perlu manual setup replication'
+                    ];
+                } else {
+                    // Demote VPS C to slave (enable read_only)
+                    $demoteC = $this->dbReplication->demoteToSlave($vpsC);
                     
-                    if ($slaveResult['success']) {
-                        $log->addStep('reconfigure_replication', 'success', 'Replication VPS B → VPS C configured');
-                        $steps[] = ['step' => 'reconfigure_replication', 'status' => 'success'];
+                    // Get master status from VPS B
+                    $masterStatus = $this->dbReplication->getMasterStatus($vpsB);
+                    
+                    if ($masterStatus['success']) {
+                        // Configure VPS C as slave from VPS B
+                        $slaveResult = $this->dbReplication->configureSlave(
+                            $vpsC,
+                            $vpsB->ip_address,
+                            $vpsB->replication_user ?? 'replication',
+                            $vpsB->replication_password ?? '',
+                            $masterStatus['file'],
+                            $masterStatus['position']
+                        );
+                        
+                        if ($slaveResult['success']) {
+                            $log->addStep('reconfigure_replication', 'success', 'Replication VPS B → VPS C configured');
+                            $steps[] = ['step' => 'reconfigure_replication', 'status' => 'success'];
+                        } else {
+                            $log->addStep('reconfigure_replication', 'warning', 'Gagal configure slave: ' . ($slaveResult['error'] ?? 'Unknown'));
+                            $steps[] = [
+                                'step' => 'reconfigure_replication',
+                                'status' => 'warning',
+                                'detail' => 'Perlu manual setup replication'
+                            ];
+                        }
                     } else {
-                        $log->addStep('reconfigure_replication', 'warning', 'Gagal configure slave: ' . ($slaveResult['error'] ?? 'Unknown'));
+                        $log->addStep('reconfigure_replication', 'warning', 'Gagal get master status VPS B');
                         $steps[] = [
                             'step' => 'reconfigure_replication',
                             'status' => 'warning',
                             'detail' => 'Perlu manual setup replication'
                         ];
                     }
-                } else {
-                    $log->addStep('reconfigure_replication', 'warning', 'Gagal get master status VPS B');
-                    $steps[] = [
-                        'step' => 'reconfigure_replication',
-                        'status' => 'warning',
-                        'detail' => 'Perlu manual setup replication'
-                    ];
                 }
             } catch (\Throwable $e) {
                 $log->addStep('reconfigure_replication', 'warning', 'Error: ' . $e->getMessage());
@@ -536,13 +578,19 @@ class FailoverService
             // STEP 4: Clear cache VPS A
             // ----------------------------------------------------------------
             $log->addStep('clear_cache', 'running', 'Clear cache VPS A...');
-            $cacheResult = $jhAgent->clearCache();
+            
+            try {
+                $cacheResult = $jhAgent->clearCache();
             
             if ($cacheResult['success'] ?? false) {
                 $log->addStep('clear_cache', 'success', 'Cache cleared');
                 $steps[] = ['step' => 'clear_cache', 'status' => 'success'];
             } else {
-                $log->addStep('clear_cache', 'warning', 'Cache clear gagal');
+                $log->addStep('clear_cache', 'warning', 'Cache clear gagal (agent not installed?)');
+                $steps[] = ['step' => 'clear_cache', 'status' => 'warning'];
+            }
+            } catch (\Throwable $e) {
+                $log->addStep('clear_cache', 'warning', 'Cache clear gagal: ' . $e->getMessage());
                 $steps[] = ['step' => 'clear_cache', 'status' => 'warning'];
             }
 
@@ -576,7 +624,9 @@ class FailoverService
             // STEP 7: Restart queue VPS A
             // ----------------------------------------------------------------
             $log->addStep('restart_queue', 'running', 'Restart queue VPS A...');
-            $queueResult = $jhAgent->restartQueue();
+            
+            try {
+                $queueResult = $jhAgent->restartQueue();
             
             if ($queueResult['success'] ?? false) {
                 $log->addStep('restart_queue', 'success', 'Queue restarted');
@@ -585,13 +635,17 @@ class FailoverService
                 $log->addStep('restart_queue', 'warning', 'Queue restart gagal');
                 $steps[] = ['step' => 'restart_queue', 'status' => 'warning'];
             }
+            } catch (\Throwable $e) {
+                $log->addStep('restart_queue', 'warning', 'Queue restart gagal: ' . $e->getMessage());
+                $steps[] = ['step' => 'restart_queue', 'status' => 'warning'];
+            }
 
             $log->markSuccess('Rollback ke VPS A berhasil', ['steps' => $steps]);
             
             return [
                 'success' => true,
                 'log_id'  => $log->id,
-                'message' => 'Rollback berhasil. VPS A kembali primary.',
+                'message' => '✅ Rollback berhasil! VPS A kembali primary, VPS B master, replication VPS B → VPS C.',
                 'steps'   => $steps,
             ];
 

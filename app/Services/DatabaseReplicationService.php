@@ -241,11 +241,58 @@ class DatabaseReplicationService
             // Reset slave (promote to master)
             $pdo->exec('RESET SLAVE ALL');
             
+            // Disable read_only mode (allow writes)
+            $pdo->exec('SET GLOBAL read_only = OFF');
+            
+            Log::info('[DatabaseReplicationService] Server promoted to master', [
+                'server' => $slave->name,
+                'ip' => $slave->ip_address,
+            ]);
+            
             return [
                 'success' => true,
-                'message' => 'Server promoted to master successfully',
+                'message' => 'Server promoted to master successfully (read_only disabled)',
             ];
         } catch (PDOException $e) {
+            Log::error('[DatabaseReplicationService] Promote to master failed', [
+                'server' => $slave->name,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Demote master to slave (enable read_only)
+     */
+    public function demoteToSlave(FailoverServer $server): array
+    {
+        try {
+            $pdo = $this->createConnection($server);
+            
+            // Enable read_only mode
+            $pdo->exec('SET GLOBAL read_only = ON');
+            
+            Log::info('[DatabaseReplicationService] Server demoted to slave', [
+                'server' => $server->name,
+                'ip' => $server->ip_address,
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => 'Server demoted to slave (read_only enabled)',
+            ];
+        } catch (PDOException $e) {
+            Log::error('[DatabaseReplicationService] Demote to slave failed', [
+                'server' => $server->name,
+                'error' => $e->getMessage(),
+            ]);
+            
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
